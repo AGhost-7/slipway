@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require 'dev_dock'
+
+DevDock::start 'aghost7/nodejs-dev:boron'
