@@ -51,7 +51,6 @@ module DevDock
 				'-ti',
 				'--detach-keys',
 				'ctrl-q,ctrl-q',
-				'-u', `id -u`,
 				'-e', 'GH_USER',
 				'-e', 'GH_PASS',
 				'-v', '/run/docker.sock:/var/run/docker.sock'

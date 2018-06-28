@@ -2,4 +2,29 @@
 
 require 'dev_dock'
 
-DevDock::start 'aghost7/nodejs-dev:boron'
+$help_text = <<TEXT
+dev_dock <command> <options>
+TEXT
+
+def help(code = 1)
+	puts $help_text
+	exit code
+end
+
+if ARGV[0] == "-h" or ARGV[0] == "--help"
+	help(0)
+end
+
+if ARGV.length != 2
+	help
+end
+
+subcommand = ARGV.shift
+
+if subcommand == "start"
+	DevDock::start ARGV[0]
+elsif subcommand == "purge"
+	DevDock::purge ARGV[0]
+else
+	help
+end

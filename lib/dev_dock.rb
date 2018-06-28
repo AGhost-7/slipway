@@ -1,4 +1,5 @@
 require "dev_dock/container"
+require "dev_dock/log"
 
 module DevDock
 
@@ -6,6 +7,7 @@ module DevDock
 		container = DevDock::DevContainer.new(name)
 
 		if not container.image.exist?
+			Log::info('image does not exist, pulling')
 			container.image.pull
 		end
 		container.volumes.create

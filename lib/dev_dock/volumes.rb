@@ -1,5 +1,6 @@
 require 'docker'
 require 'dev_dock/util'
+require 'dev_dock/log'
 
 # Automatically generated volumes based on what the image has listed in its
 # dockerfile
@@ -13,22 +14,35 @@ module DevDock
 			@name = DevDock::Util::snake_case("dev_dock_#{image_name}#{path}")
 		end
 
+		def name
+			@name
+		end
+
+		def path
+			@path
+		end
+
 		# returns true if the volume exists
 		def exist?
-			volumes = Docker::Util.parse_json(Docker.connection.get('/volumes'))
+			volumes = Docker::Util.parse_json(Docker.connection.get('/volumes'))["Volumes"]
+			Log::debug("Volumes in docker: #{volumes}")
 			volumes.any? { |volume| volume['Name'] == @name }
 		end
 
 		# creates the volume if it does not exist
 		def create
+			Log::debug("Checking volume #{@name} for path #{@path}")
 			if !exist?
+				Log::info("Creating volume #{@name}")
 				Docker::Volume.create(@name)
 			end
 		end
 
 		# removes the volume if it exists
 		def remove
+			Log::debug("Checking volume #{@name} for path #{@path}")
 			if exist?
+				Log::info("Removing volume #{@name})")
 				Docker::Volume.get(@name).remove
 			end
 		end
@@ -66,7 +80,7 @@ module DevDock
 
 		# creates all desired volumes based on the configuration in the image
 		def create
-			puts 'DevVolumes::create'
+			Log::debug 'DevVolumes::create'
 			list.each do |volume|
 				volume.create
 			end
