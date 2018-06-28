@@ -1,0 +1,10 @@
+dev_dock <command> <options>
+
+subcommands:
+
+  start <image>
+    Start a development session.
+
+  purge <image>
+    Kill your container and remove all volumes tied to it.
+

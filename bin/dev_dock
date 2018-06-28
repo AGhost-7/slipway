@@ -2,12 +2,9 @@
 
 require 'dev_dock'
 
-$help_text = <<TEXT
-dev_dock <command> <options>
-TEXT
-
 def help(code = 1)
-	puts $help_text
+	helpfile = File.expand_path('../../help.txt', __FILE__)
+	puts File.read(helpfile)
 	exit code
 end
 

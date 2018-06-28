@@ -1,4 +1,5 @@
 # DevDock
+
 A command utility to manage containerized development environments.
 
 
@@ -8,7 +9,7 @@ A command utility to manage containerized development environments.
 
 ## Usage
 
-TODO: Write usage instructions here
+Run `dev_dock --help` for full instructions.
 
 ## Development
 
