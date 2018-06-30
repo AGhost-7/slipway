@@ -2,6 +2,7 @@ PATH
   remote: .
   specs:
     dev_dock (0.1.1)
+      docker-api (~> 1.34)
 
 GEM
   remote: https://rubygems.org/

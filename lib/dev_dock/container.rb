@@ -42,7 +42,7 @@ module DevDock
 
 		def run
 			arguments = [
-				'/usr/local/bin/docker',
+				'docker',
 				'run',
 				'--privileged',
 				'--name', @name,
