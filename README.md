@@ -9,7 +9,11 @@ A command utility to manage containerized development environments.
 
 ## Usage
 
-Run `dev_dock --help` for full instructions.
+Spin up a development container with `dev_dock start <container>`, for example:
+
+```bash
+dev_dock start aghost7/nodejs-dev:carbon
+```
 
 ## Development
 
