@@ -5,21 +5,21 @@ require 'dev_dock/volumes'
 
 module DevDock
 
-	class DevContainer
+  class DevContainer
 
-		def initialize(image_name)
-			@image = DevDock::DevImage.new(image_name)
-			@volumes = DevDock::DevVolumes.new(@image)
-			@name = DevDock::Util::snake_case("dev_dock_#{image_name}")
-		end
+    def initialize(image_name)
+      @image = DevDock::DevImage.new(image_name)
+      @volumes = DevDock::DevVolumes.new(@image)
+      @name = DevDock::Util::snake_case("dev_dock_#{image_name}")
+    end
 
-		def image
-			@image
-		end
+    def image
+      @image
+    end
 
-		def volumes
-			@volumes
-		end
+    def volumes
+      @volumes
+    end
 
     def docker_group
       docker_line = File
@@ -36,17 +36,17 @@ module DevDock
       group
     end
 
-		def exist?
-			Docker::Container.get(@name)
-			true
-		rescue Docker::Error::NotFoundError
-			false
-		end
+    def exist?
+      Docker::Container.get(@name)
+      true
+    rescue Docker::Error::NotFoundError
+      false
+    end
 
-		# kill container
-		def kill
+    # kill container
+    def kill
       Docker::Container.get(@name).kill		
-		end
+    end
 
     def enable_x11(arguments)
       if File.exist? '/tmp/.X11-unix'
@@ -60,42 +60,42 @@ module DevDock
       end
     end
 
-		def run
-			arguments = [
-				'docker',
-				'run',
-				'--privileged',
-				'--name', @name,
+    def run
+      arguments = [
+        'docker',
+        'run',
+        '--privileged',
+        '--name', @name,
         '--group-add', docker_group,
-				'--net=host',
-				'--rm',
-				'-ti',
-				'--detach-keys',
-				'ctrl-q,ctrl-q',
-				'-e', 'GH_USER',
-				'-e', 'GH_PASS',
-				'-v', '/run/docker.sock:/var/run/docker.sock'
-			]
+        '--net=host',
+        '--rm',
+        '-ti',
+        '--detach-keys',
+        'ctrl-q,ctrl-q',
+        '-e', 'GH_USER',
+        '-e', 'GH_PASS',
+        '-v', '/run/docker.sock:/var/run/docker.sock'
+      ]
 
-			['workspaces', '.gitconfig', '.ssh'].each do |directory|
-				arguments.push '-v', "#{ENV['HOME']}/#{directory}:/home/#{@image.user}/#{directory}"
-			end
+      ['workspaces', '.gitconfig', '.ssh'].each do |directory|
+        arguments.push '-v', "#{ENV['HOME']}/#{directory}:/home/#{@image.user}/#{directory}"
+      end
 
-			if RUBY_PLATFORM.start_with?("x86_64-linux")
-				enable_x11(arguments)
-				arguments.push '-v', '/etc/localhost:/etc/localhost:ro'
-			end
+      if RUBY_PLATFORM.start_with?("x86_64-linux")
+        enable_x11(arguments)
+        arguments.push '-v', '/etc/localhost:/etc/localhost:ro'
+      end
 
-			@volumes.list.each do |volume|
-				arguments.push '--mount', "source=#{volume.name},target=#{volume.path}"
-			end
+      @volumes.list.each do |volume|
+        arguments.push '--mount', "source=#{volume.name},target=#{volume.path}"
+      end
 
-			arguments.push @image.name
+      arguments.push @image.name
 
-			arguments.push 'tmux'
-			arguments.push 'new'
+      arguments.push 'tmux'
+      arguments.push 'new'
 
-			exec *arguments
-		end
-	end
+      exec *arguments
+    end
+  end
 end
