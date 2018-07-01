@@ -26,7 +26,7 @@ module DevDock
         .read('/etc/group')
         .lines
         .find { |line| line.start_with?('docker') }
-      group = docker_line and docker_line.split(':')[2]
+      group = docker_line and docker_line.split(':')[1]
       if docker_line.nil?
         group = docker_line
       else
@@ -45,15 +45,20 @@ module DevDock
 
 		# kill container
 		def kill
-			Docker::Container.get(@name).kill		
+      Docker::Container.get(@name).kill		
 		end
 
-		def enable_x11(arguments)
-			arguments.push '-v'
-			arguments.push '/tmp/.X11-unix:/tmp/.X11-unix:ro'
-			arguments.push '-e'
-			arguments.push 'DISPLAY'
-		end
+    def enable_x11(arguments)
+      if File.exist? '/tmp/.X11-unix'
+        Log::debug('X11 socket file found')
+        arguments.push '-v'
+        arguments.push '/tmp/.X11-unix:/tmp/.X11-unix:ro'
+        arguments.push '-e'
+        arguments.push 'DISPLAY'
+      else
+        Log::debug('Did not find X11 socket file')
+      end
+    end
 
 		def run
 			arguments = [
@@ -76,7 +81,7 @@ module DevDock
 				arguments.push '-v', "#{ENV['HOME']}/#{directory}:/home/#{@image.user}/#{directory}"
 			end
 
-			if RUBY_PLATFORM == "x86_64-linux"
+			if RUBY_PLATFORM.start_with?("x86_64-linux")
 				enable_x11(arguments)
 				arguments.push '-v', '/etc/localhost:/etc/localhost:ro'
 			end
