@@ -10,7 +10,7 @@ module DevDock
 		def initialize(image_name)
 			@image = DevDock::DevImage.new(image_name)
 			@volumes = DevDock::DevVolumes.new(@image)
-			@name = DevDock::Util::snake_case("dev_dock_" + image_name)
+			@name = DevDock::Util::snake_case("dev_dock_#{image_name}")
 		end
 
 		def image
@@ -20,6 +20,21 @@ module DevDock
 		def volumes
 			@volumes
 		end
+
+    def docker_group
+      docker_line = File
+        .read('/etc/group')
+        .lines
+        .find { |line| line.start_with?('docker') }
+      group = docker_line and docker_line.split(':')[2]
+      if docker_line.nil?
+        group = docker_line
+      else
+        group = docker_line.split(':')[2]
+      end
+      Log::debug("Docker gid is #{group}")
+      group
+    end
 
 		def exist?
 			Docker::Container.get(@name)
@@ -46,6 +61,7 @@ module DevDock
 				'run',
 				'--privileged',
 				'--name', @name,
+        '--group-add', docker_group,
 				'--net=host',
 				'--rm',
 				'-ti',
