@@ -88,7 +88,7 @@ module DevDock
 
     # purges all related volumes
     def remove
-      puts 'DevVolumes::remove'
+      Log::debug 'DevVolumes::remove'
       list.each do |volume|
         volume.remove
       end

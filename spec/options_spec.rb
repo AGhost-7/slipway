@@ -47,4 +47,18 @@ RSpec.describe DevDock::Options do
     expect(options.image_name).to eql('image')
   end
 
+  it 'allows you to specify environment' do
+    options = DevDock::Options::new [
+      'start', '-e', 'JIRA_USERNAME', 'image'
+    ]
+    options.parse
+    expect(options.error).to be_nil
+    expect(options.environment).to eql(['JIRA_USERNAME'])
+  end
+
+  it 'prevents from ommitting the environment variable itself' do
+    options = DevDock::Options::new ['start', '-e', 'image']
+    options.parse
+    expect(options.error).to eql('Invalid use of option -e')
+  end
 end

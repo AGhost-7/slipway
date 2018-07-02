@@ -4,8 +4,8 @@ module DevDock
 
   class DevImage
 
-    def initialize(name)
-      @name = name
+    def initialize(image_name)
+      @name = image_name
       @container_config = nil
     end
 
@@ -19,7 +19,7 @@ module DevDock
 
     def pull
       # for some reason pulling images isn't part of the api?
-      `docker pull #{name}`
+      `docker pull #{@name}`
     end
 
     def container_config

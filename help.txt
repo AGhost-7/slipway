@@ -1,9 +1,18 @@
-dev_dock <command> <options>
+dev_dock <subcommand> [options...] <image>
 
 subcommands:
 
   start <image>
     Start a development session.
+
+      options:
+
+        -v <Volume Specification>, --volume <Volume Specification>
+          Mount a specific volume, uses same syntax as docker's volume option.
+
+        -e <List>, --env <List>
+          Specifies additional environment variables for the container. Syntax
+          is identical to docker's.
 
   purge <image>
     Kill your container and remove all volumes tied to it.

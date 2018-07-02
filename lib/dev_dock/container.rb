@@ -95,6 +95,10 @@ module DevDock
         arguments.push '-v', volume
       end
 
+      @options.environment.each do |environment|
+        arguments.push '-e', environment
+      end
+
       arguments.push @image.name
 
       arguments.push 'tmux'
