@@ -5,32 +5,35 @@ module DevDock
     def initialize(argv)
       @volumes = []
       @error = nil
+      @argv = argv
     end
 
     def parse
       parse_subcommand @argv[0]
       if not @error
         parse_options @argv.slice(1, @argv.length)
+        if not @error
+          @image_name = @argv.last
+        end
       end
     end
 
-    def parse_subcommand(argv)
-      subcommand = argv[0]
-      if subcommand == "start" or subcommand == "s"
-        @sudcommand = "start"
-      elsif subcommand == "purge" or subcommand == "p"
-        @subcommand = "purge"
+    def parse_subcommand(arg)
+      if arg == 'start' or arg == 's'
+        @subcommand = 'start'
+      elsif arg == 'purge' or arg == 'p'
+        @subcommand = 'purge'
       else
-        @error = "Invalid subcommand #{subcommand}"
+        @error = "Invalid subcommand #{arg}"
       end
     end
 
     def parse_options(argv)
-      i = 1
-      while argv[i]
+      i = 0
+      while argv[i + 1]
         arg = argv[i]
         if arg == '--volume' or arg == '-v'
-          @volumes.push arg[i + 1]
+          @volumes.push argv[i + 1]
           i += 1
         else
           @error = "Invalid option: #{arg}"
@@ -51,5 +54,10 @@ module DevDock
     def volumes
       @volumes
     end
+
+    def image_name
+      @image_name
+    end
+
   end
 end

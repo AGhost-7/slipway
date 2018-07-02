@@ -7,11 +7,11 @@ module DevDock
 
   class DevContainer
 
-    def initialize(image_name, options)
+    def initialize(options)
       @options = options
-      @image = DevDock::DevImage.new(image_name)
+      @image = DevDock::DevImage.new(options.image_name)
       @volumes = DevDock::DevVolumes.new(@image)
-      @name = DevDock::Util::snake_case("dev_dock_#{image_name}")
+      @name = DevDock::Util::snake_case("dev_dock_#{options.image_name}")
     end
 
     def image

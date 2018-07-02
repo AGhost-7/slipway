@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'dev_dock'
+require 'dev_dock/options'
 
 def help(code = 1)
 	helpfile = File.expand_path('../../help.txt', __FILE__)
@@ -12,11 +13,7 @@ if ARGV[0] == "-h" or ARGV[0] == "--help"
 	help(0)
 end
 
-if ARGV.length != 2
-	help
-end
-
-options = DebDock::Options.new(ARGV)
+options = DevDock::Options.new(ARGV)
 options.parse
 
 if options.error
