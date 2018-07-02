@@ -16,12 +16,18 @@ if ARGV.length != 2
 	help
 end
 
-subcommand = ARGV.shift
+options = DebDock::Options.new(ARGV)
+options.parse
 
-if subcommand == "start"
-	DevDock::start ARGV[0]
-elsif subcommand == "purge"
-	DevDock::purge ARGV[0]
+if options.error
+  puts options.error
+  help
+end
+
+if options.subcommand == "start"
+	DevDock::start options
+elsif options.subcommand == "purge"
+	DevDock::purge options
 else
 	help
 end

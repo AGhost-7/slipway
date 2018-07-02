@@ -7,7 +7,8 @@ module DevDock
 
   class DevContainer
 
-    def initialize(image_name)
+    def initialize(image_name, options)
+      @options = options
       @image = DevDock::DevImage.new(image_name)
       @volumes = DevDock::DevVolumes.new(@image)
       @name = DevDock::Util::snake_case("dev_dock_#{image_name}")
@@ -88,6 +89,10 @@ module DevDock
 
       @volumes.list.each do |volume|
         arguments.push '--mount', "source=#{volume.name},target=#{volume.path}"
+      end
+
+      @options.volumes.each do |volume|
+        arguments.push '-v', volume
       end
 
       arguments.push @image.name
