@@ -2,7 +2,7 @@ dev_dock <subcommand> [options...] <image>
 
 subcommands:
 
-  start <image>
+  start [options..] <image> [command..]
     Start a development session.
 
       options:

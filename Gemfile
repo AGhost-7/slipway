@@ -6,3 +6,5 @@ git_source(:github) {|repo_name| "https://github.com/#{repo_name}" }
 gemspec
 
 gem "docker-api", "~> 1.34"
+
+gem "byebug", "~> 10.0", :groups => [:development, :test]

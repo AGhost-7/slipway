@@ -61,7 +61,7 @@ module DevDock
       end
     end
 
-    def run
+    def run_arguments
       arguments = [
         'docker',
         'run',
@@ -101,10 +101,13 @@ module DevDock
 
       arguments.push @image.name
 
-      arguments.push 'tmux'
-      arguments.push 'new'
+      arguments.push *@options.run_command
 
-      exec *arguments
+      arguments
+    end
+
+    def run
+      exec *run_arguments
     end
   end
 end

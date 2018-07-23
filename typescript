@@ -1,0 +1,17 @@
+Script started on Mon 23 Jul 2018 05:14:46 PM UTC
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+HOSTNAME=jonathan-Z97X-Gaming-5
+TERM=screen-256color
+GH_USER=AGhost-7
+GH_PASS=b6a72e083fcd14b286f9e3489aefd4be05572349
+DISPLAY=:0
+SAMPLE_ENVIRONMENT=1
+DOCKER_CLI_SHA256=7dcd87ba776743b3cdf584fb54b85318ac4e4671e1c1afc24e24697f9e101a2d
+DOCKER_CLI_VERSION=17.09.0
+USER=aghost-7
+HOME=/home/aghost-7
+XDG_CONFIG_HOME=/home/aghost-7/.config
+TMUX_VERSION=2.7
+LC_ALL=en_US.UTF-8
+LANG=en_US.UTF-8
+LANGUAGE=en_US.UTF-8

@@ -59,6 +59,13 @@ RSpec.describe DevDock::Options do
   it 'prevents from ommitting the environment variable itself' do
     options = DevDock::Options::new ['start', '-e', 'image']
     options.parse
-    expect(options.error).to eql('Invalid use of option -e')
+    expect(options.error.nil?).to eql(false)
   end
+
+  it 'allows to specify the command to start the container' do
+    options = DevDock::Options::new ['start', 'image', 'screen']
+    options.parse
+    expect(options.run_command)
+  end
+
 end
