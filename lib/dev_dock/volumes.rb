@@ -26,7 +26,7 @@ module DevDock
     def exist?
       volumes = Docker::Util.parse_json(Docker.connection.get('/volumes'))["Volumes"]
       Log::debug("Volumes in docker: #{volumes}")
-      volumes.any? { |volume| volume['Name'] == @name }
+      not volumes.nil? and volumes.any? { |volume| volume['Name'] == @name }
     end
 
     # creates the volume if it does not exist
