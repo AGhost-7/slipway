@@ -7,12 +7,16 @@ module DevDock
 
   class Options
 
+    attr_reader :run_command, :subcommand, :error, :volumes, :image_name, :environment,
+      :host_home
+
     def initialize(argv)
       @volumes = []
       @environment = []
       @subcommand = nil
       @error = nil
       @image_name = nil
+      @host_home = nil
       @argv = argv
       @run_command = ['tmux', 'new']
     end
@@ -28,6 +32,11 @@ module DevDock
         end
       end
 
+      parse_env
+    end
+
+    def parse_env
+      @host_home = ENV['DEV_DOCK_HOST_HOME'] || ENV['HOME']
     end
 
     def parse_end
@@ -76,8 +85,6 @@ module DevDock
         @error = "Invalid subcommand #{arg}"
       end
     end
-
-    attr_reader :run_command, :subcommand, :error, :volumes, :image_name, :environment
 
     def inspect
       "Subcommand: #{@subcommand}, Image: #{@image_name}, Volumes: #{@volumes}, Environment: #{@environment}, Run Command: #{@run_command}"

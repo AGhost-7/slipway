@@ -10,7 +10,9 @@ module DevDock
       Log::info('image does not exist, pulling')
       container.image.pull
     end
+
     container.volumes.create
+    container.binds.create
 
     container.run
   end

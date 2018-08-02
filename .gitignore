@@ -10,3 +10,5 @@
 /vendor
 # rspec failure tracking
 .rspec_status
+/typescript
+/.test-dir

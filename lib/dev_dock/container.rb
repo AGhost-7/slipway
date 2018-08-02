@@ -1,4 +1,5 @@
 require 'docker'
+require 'dev_dock/binds'
 require 'dev_dock/util'
 require 'dev_dock/image'
 require 'dev_dock/volumes'
@@ -7,19 +8,35 @@ module DevDock
 
   class DevContainer
 
+    attr_reader :image, :volumes, :binds
+
     def initialize(options)
       @options = options
       @image = DevDock::DevImage.new(options.image_name)
       @volumes = DevDock::DevVolumes.new(@image)
+      @binds = DevDock::DevBinds.new([
+        '/var/run/docker.sock:/var/run/docker.sock'
+      ])
       @name = DevDock::Util::snake_case("dev_dock_#{options.image_name}")
+
+      init_binds
     end
 
-    def image
-      @image
-    end
+    def init_binds
 
-    def volumes
-      @volumes
+      ['workspaces', '.gitconfig', '.ssh'].each do |directory|
+        source = File.join(ENV['HOME'], directory)
+        target = File.join("/home", @image.user, directory)
+        @binds.push("#{source}:#{target}")
+      end
+
+      if x11?
+        @binds.push('/tmp/.X11-unix:/tmp/.X11-unix:ro')
+      end
+
+      if linux?
+        @binds.push( '/etc/localhost:/etc/localhost:ro')
+      end
     end
 
     def docker_group
@@ -49,11 +66,17 @@ module DevDock
       Docker::Container.get(@name).kill		
     end
 
+    def x11?
+      File.exists?('/tmp/.X11-unix')
+    end
+
+    def linux?
+      RUBY_PLATFORM.start_with?("x86_64-linux")
+    end
+
     def enable_x11(arguments)
-      if File.exist? '/tmp/.X11-unix'
+      if x11?
         Log::debug('X11 socket file found')
-        arguments.push '-v'
-        arguments.push '/tmp/.X11-unix:/tmp/.X11-unix:ro'
         arguments.push '-e'
         arguments.push 'DISPLAY'
       else
@@ -75,16 +98,11 @@ module DevDock
         'ctrl-q,ctrl-q',
         '-e', 'GH_USER',
         '-e', 'GH_PASS',
-        '-v', '/run/docker.sock:/var/run/docker.sock'
+        '-e', "DEV_DOCK_HOST_HOME=#{@options.host_home}"
       ]
 
-      ['workspaces', '.gitconfig', '.ssh'].each do |directory|
-        arguments.push '-v', "#{ENV['HOME']}/#{directory}:/home/#{@image.user}/#{directory}"
-      end
-
-      if RUBY_PLATFORM.start_with?("x86_64-linux")
+      if linux?
         enable_x11(arguments)
-        arguments.push '-v', '/etc/localhost:/etc/localhost:ro'
       end
 
       @volumes.list.each do |volume|
@@ -93,6 +111,10 @@ module DevDock
 
       @options.volumes.each do |volume|
         arguments.push '-v', volume
+      end
+
+      @binds.list.each do |bind|
+        arguments.push '-v', bind.to_argument
       end
 
       @options.environment.each do |environment|
