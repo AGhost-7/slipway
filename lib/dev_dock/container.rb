@@ -35,7 +35,7 @@ module DevDock
       end
 
       if linux?
-        @binds.push( '/etc/localhost:/etc/localhost:ro')
+        @binds.push( '/etc/localtime:/etc/localtime:ro')
       end
     end
 
