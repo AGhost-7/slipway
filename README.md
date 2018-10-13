@@ -1,5 +1,7 @@
 # Slipway
-An easier way to use containers for development on Linux.
+An easier way to use containers for development on Linux. It automatically
+maps credentials and sets up things such as the clipboard for developing
+straight from containers.
 
 ## Getting Started
 Install slipway:

@@ -1,8 +1,8 @@
 
 import os
-from os import environ, path
 from .image import Image
 from .volumes import Volumes
+from .binds import Binds
 from .util import snake_case
 
 
@@ -13,6 +13,7 @@ class Container(object):
         self.args = args
         self.image = Image(self.client, self.args)
         self.volumes = Volumes(self.client, self.args, self.image)
+        self.binds = Binds(self.client, self.args, self.image)
         self.name = 'slipway_' + snake_case(self.args.image)
 
     def _run_arguments(self):
@@ -26,16 +27,16 @@ class Container(object):
             '--name', self.name,
             '-e', 'GH_USER',
             '-e', 'GH_PASS',
-            '-e', 'DISPLAY',
-            '-v', '/tmp/.X11-unix:/tmp/.X11-unix:ro',
-            '-v', '/etc/localtime:/etc/localtime:ro'
+            '-e', 'DISPLAY'
         ]
-        for mapping in ('workspaces', '.gitconfig', '.ssh'):
+
+        for bind in self.binds.list():
             arguments.append('-v')
-            arguments.append(
-                path.join(environ['HOME'], mapping) + ':' +
-                path.join(self.image.home, mapping)
-            )
+            argument = bind.host_path + ':' + bind.container_path
+            if 'ro' in bind.type:
+                argument += ':ro'
+            arguments.append(argument)
+
         for volume in self.volumes.list():
             arguments.append('--mount')
             arguments.append(

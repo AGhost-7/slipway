@@ -12,6 +12,7 @@ def parse_args():
 
     start_parser = subparsers.add_parser('start')
     start_parser.add_argument('image')
+    start_parser.add_argument('--volume', action='append')
 
     purge_parser = subparsers.add_parser('purge')
     purge_parser.add_argument('image')
@@ -29,6 +30,7 @@ def main():
     if args.mode == 'start':
         container.image.initialize()
         container.volumes.initialize()
+        container.binds.initialize()
         container.run()
     elif args.mode == 'purge':
         container.volumes.purge()
