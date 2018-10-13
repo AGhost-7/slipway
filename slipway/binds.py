@@ -52,7 +52,7 @@ class Binds(object):
         if path.exists('/tmp/.X11-unix'):
             yield Bind('/tmp/.X11-unix', '/tmp/.X11-unix', 'fro')
 
-        for volume in self.args.volume:
+        for volume in self.args.volume or []:
             parts = volume.split(':')
             host_path = parts[0]
             container_path = parts[1]
