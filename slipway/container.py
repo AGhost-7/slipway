@@ -1,5 +1,6 @@
 
 import os
+from os import path
 from .image import Image
 from .volumes import Volumes
 from .binds import Binds
@@ -16,19 +17,34 @@ class Container(object):
         self.binds = Binds(self.client, self.args, self.image)
         self.name = 'slipway_' + snake_case(self.args.image)
 
+    def _entrypoint(self):
+        script_dir = path.dirname(path.abspath(__file__))
+        return path.join(script_dir, 'entrypoint.py')
+
+    def _volumes_env(self):
+        return ','.join(list(map(lambda vol: vol.path, self.volumes.list())))
+
     def _run_arguments(self):
         arguments = [
             'docker',
             'run',
             '--net=host',
+            '--user', 'root',
             '--rm',
             '-ti',
             '--detach-keys', 'ctrl-q,ctrl-q',
             '--name', self.name,
             '-e', 'GH_USER',
             '-e', 'GH_PASS',
-            '-e', 'DISPLAY'
+            '-e', 'DISPLAY',
+            '-e', 'SLIPWAY_USER={}'.format(self.image.user),
+            '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env())
         ]
+
+        arguments.extend([
+            '-v', self._entrypoint() + ':/slipway-entrypoint.py:ro',
+            '--entrypoint', '/slipway-entrypoint.py'
+        ])
 
         for bind in self.binds.list():
             arguments.append('-v')

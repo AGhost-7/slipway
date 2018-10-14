@@ -36,6 +36,13 @@ class Image(object):
         return list(config['Volumes'].keys())
 
     @property
+    def entrypoint(self):
+        return self._docker_image().attrs['ContainerConfig']['Entrypoint']
+
+    @property
+    def user(self):
+        return self._docker_image().attrs['ContainerConfig']['User']
+
+    @property
     def home(self):
-        return path.join(
-            '/home', self._docker_image().attrs['ContainerConfig']['User'])
+        return path.join('/home', self.user)
