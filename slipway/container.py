@@ -38,13 +38,14 @@ class Container(object):
             '-e', 'GH_PASS',
             '-e', 'DISPLAY',
             '-e', 'SLIPWAY_USER={}'.format(self.image.user),
-            '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env())
-        ]
-
-        arguments.extend([
+            '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
             '-v', self._entrypoint() + ':/slipway-entrypoint.py:ro',
             '--entrypoint', '/slipway-entrypoint.py'
-        ])
+        ]
+
+        for env in self.args.environment or []:
+            arguments.append('-e')
+            arguments.append(env)
 
         for bind in self.binds.list():
             arguments.append('-v')
@@ -57,6 +58,7 @@ class Container(object):
             arguments.append('--mount')
             arguments.append(
                 'source={},target={}'.format(volume.name, volume.path))
+
         arguments.append(self.image.name)
         arguments.append('tmux')
         arguments.append('new')

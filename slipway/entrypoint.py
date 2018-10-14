@@ -25,7 +25,7 @@ for volume in environ.get('SLIPWAY_VOLUMES').split(','):
 # Essentially, doing this but in python:
 # exec su -c "$@" $SLIPWAY_USER
 
-args = ['sudo', '-u', user_name]
+args = ['sudo', '--preserve-env', '-u', user_name]
 
 if entrypoint:
     args.append(entrypoint)
