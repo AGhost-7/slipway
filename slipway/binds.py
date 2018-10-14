@@ -1,3 +1,4 @@
+import pwd
 import os
 from os import environ, path
 
@@ -51,6 +52,17 @@ class Binds(object):
             yield Bind('/etc/localtime', '/etc/localtime', 'fro')
         if path.exists('/tmp/.X11-unix'):
             yield Bind('/tmp/.X11-unix', '/tmp/.X11-unix', 'fro')
+
+        uid = pwd.getpwnam(environ['USER']).pw_uid
+        gnupg_socket_path = path.join('/run/user', str(uid), 'gnupg')
+        if path.exists(gnupg_socket_path):
+            # FIXME: how to get uid of user in container?
+            yield Bind(gnupg_socket_path, '/run/user/1000/gnupg', 'dro')
+
+        gnupg_path = path.join(environ['HOME'], '.gnupg')
+        if path.exists(gnupg_path):
+            container_path = path.join(self.image.home, '.gnupg')
+            yield Bind(gnupg_path, container_path, 'd')
 
         for volume in self.args.volume or []:
             parts = volume.split(':')

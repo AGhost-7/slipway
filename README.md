@@ -13,3 +13,26 @@ Run an example image:
 ```
 slipway start aghost7/nodejs-dev:bionic-carbon
 ```
+
+## GnuPG (GPG) Support
+On your host, you will need to have gpg of configured with the daemon running.
+Slipway will detect that gpg is running and will automatically create a bind
+mount (volume) to map the socket file into the container.
+
+Enable gpg signing git commits:
+```sh
+git config --global commit.gpgSign true
+```
+
+If you want to always sign tags:
+```sh
+git config --global tag.forceSignAnnotated true
+```
+
+Since we want gnupg to be used from the terminal interface, we need to change
+the configuration under `~/.gnupg/gpg.conf`:
+
+```
+use-agent
+pinentry-mode loopback
+```
