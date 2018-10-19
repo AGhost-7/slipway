@@ -15,7 +15,7 @@ slipway start aghost7/nodejs-dev:bionic-carbon
 ```
 
 ## GnuPG (GPG) Support
-On your host, you will need to have gpg of configured with the daemon running.
+On your host, you will need to have gpg configured with the daemon running.
 Slipway will detect that gpg is running and will automatically create a bind
 mount (volume) to map the socket file into the container.
 
