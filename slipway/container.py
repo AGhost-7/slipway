@@ -17,10 +17,10 @@ class Container(object):
         self.binds = Binds(self.client, self.args, self.image)
         self.name = 'slipway_' + snake_case(self.args.image)
 
-    def _entrypoint(self):
+    def _entrypoint_script(self):
         module_dir = path.dirname(path.abspath(__file__))
         return path.abspath(
-            path.join(module_dir, '../scripts/entrypoint.py'))
+            path.join(module_dir, './entrypoint.py'))
 
     def _volumes_env(self):
         return ','.join(list(map(lambda vol: vol.path, self.volumes.list())))
@@ -40,8 +40,8 @@ class Container(object):
             '-e', 'DISPLAY',
             '-e', 'SLIPWAY_USER={}'.format(self.image.user),
             '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
-            '-v', self._entrypoint() + ':/slipway-entrypoint.py:ro',
-            '--entrypoint', '/slipway-entrypoint.py'
+            '-v', self._entrypoint_script() + ':/slipway-entrypoint.py:ro',
+            '--entrypoint', 'python3'
         ]
 
         for env in self.args.environment or []:
@@ -61,6 +61,7 @@ class Container(object):
                 'source={},target={}'.format(volume.name, volume.path))
 
         arguments.append(self.image.name)
+        arguments.append('/slipway-entrypoint.py')
         arguments.append('tmux')
         arguments.append('new')
         return arguments
