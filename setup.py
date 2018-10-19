@@ -1,9 +1,10 @@
+from setuptools.command.install import install
 from setuptools import setup, find_packages
 
 setup(
     name = 'slipway',
     packages = find_packages(),
-    version = '0.4.0',
+    version = '0.4.1',
     description = 'CLI tool for managing development containers',
     author = 'Jonathan Boudreau',
     author_email = 'jonathan.boudreau.92@gmail.com',
@@ -18,5 +19,6 @@ setup(
         'console_scripts': [
             'slipway=slipway:main'
         ]
-    }
+    },
+    scripts=['scripts/entrypoint.py']
 )
