@@ -18,8 +18,9 @@ class Container(object):
         self.name = 'slipway_' + snake_case(self.args.image)
 
     def _entrypoint(self):
-        script_dir = path.dirname(path.abspath(__file__))
-        return path.join(script_dir, 'entrypoint.py')
+        module_dir = path.dirname(path.abspath(__file__))
+        return path.abspath(
+            path.join(module_dir, '../scripts/entrypoint.py'))
 
     def _volumes_env(self):
         return ','.join(list(map(lambda vol: vol.path, self.volumes.list())))
