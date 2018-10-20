@@ -36,7 +36,7 @@ class Volumes(object):
 
     def initialize(self):
         """
-        Checks if the required volumer are present and creates them if missing.
+        Checks if the required volume are present and creates them if missing.
         """
         docker_volumes = self.client.volumes.list()
         for volume in self.list():

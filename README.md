@@ -36,3 +36,20 @@ the configuration under `~/.gnupg/gpg.conf`:
 use-agent
 pinentry-mode loopback
 ```
+
+## Developing
+Install pipenv:
+```
+python3 -m pip install --user --upgrade pipenv
+```
+
+Install dependencies and load virtualenv:
+```
+pipenv install --dev
+pipenv shell
+```
+
+Run tests:
+```
+pytest
+```
