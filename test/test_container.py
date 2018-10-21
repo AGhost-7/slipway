@@ -3,7 +3,8 @@ from test.util import build_image
 import docker
 import docker.errors
 from subprocess import Popen, TimeoutExpired
-import subprocess
+import pty
+import os
 
 
 class FakeArgs(object):
@@ -22,11 +23,14 @@ def create_container():
         container.kill()
     except docker.errors.NotFound:
         pass
+    master_fd, slave_fd = pty.openpty()
     process = Popen(
         Container(client, args)._run_arguments(),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        close_fds=True)
+        preexec_fn=os.setsid,
+        stdout=slave_fd,
+        stderr=slave_fd,
+        stdin=slave_fd
+        )
     try:
         process.wait(timeout=2)
         assert process.returncode is None

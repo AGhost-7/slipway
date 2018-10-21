@@ -5,7 +5,7 @@ Entrypoint script
 """
 
 import os
-from os import environ
+from os import environ, path
 import sys
 import pwd
 
@@ -29,4 +29,7 @@ if entrypoint:
 
 args.extend(sys.argv[1:])
 
-os.execvp('sudo', args)
+env = environ.copy()
+env['HOME'] = path.join('/home', user_name)
+
+os.execvpe('sudo', args, env)
