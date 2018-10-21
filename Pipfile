@@ -11,4 +11,4 @@ ptpython = "==2.0.3"
 pytest = "==3.9.1"
 
 [requires]
-python_version = "3.6"
+python_version = "3"

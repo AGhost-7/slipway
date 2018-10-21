@@ -51,5 +51,5 @@ pipenv shell
 
 Run tests:
 ```
-pytest
+pytest --capture=no
 ```
