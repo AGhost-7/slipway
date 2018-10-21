@@ -13,14 +13,14 @@ class FakeArgs(object):
 
 def test_initialize():
     try:
-        client.images.get('alpine')
-        client.images.remove('alpine')
+        client.images.get('busybox')
+        client.images.remove('busybox')
     except ImageNotFound:
         pass
-    args = FakeArgs('alpine')
+    args = FakeArgs('busybox')
     image = Image(client, args)
     image.initialize()
-    assert client.images.get('alpine') is not None
+    assert client.images.get('busybox') is not None
 
 
 def test_volumes():

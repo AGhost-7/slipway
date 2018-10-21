@@ -1,4 +1,8 @@
-FROM busybox
+FROM python:3
+
+RUN useradd foobar && \
+	apt-get update && \
+	apt-get install -y tmux sudo
 
 USER foobar
 

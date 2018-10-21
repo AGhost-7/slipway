@@ -22,9 +22,6 @@ for volume in environ.get('SLIPWAY_VOLUMES').split(','):
     if len(volume) > 0:
         os.chown(volume, uid, gid)
 
-# Essentially, doing this but in python:
-# exec su -c "$@" $SLIPWAY_USER
-
 args = ['sudo', '--preserve-env', '-u', user_name]
 
 if entrypoint:
