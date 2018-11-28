@@ -1,3 +1,4 @@
+from os import environ, path
 import sys
 from argparse import ArgumentParser
 
@@ -14,6 +15,8 @@ def parse_args():
     start_parser.add_argument('image')
     start_parser.add_argument('--volume', action='append')
     start_parser.add_argument('--environment', action='append')
+    start_parser.add_argument(
+        '--workspace', default=path.join(environ['HOME'], 'workspace'))
 
     purge_parser = subparsers.add_parser('purge')
     purge_parser.add_argument('image')

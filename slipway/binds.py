@@ -39,7 +39,6 @@ class Binds(object):
         List all bind mounts, including the default ones.
         """
         home_mappings = [
-            ('d', 'workspaces'),
             ('d', '.ssh'),
             ('f', '.gitconfig')
         ]
@@ -47,6 +46,9 @@ class Binds(object):
             host_path = path.join(environ['HOME'], mapping)
             container_path = path.join(self.image.home, mapping)
             yield Bind(host_path, container_path, type)
+
+        workspace_base = path.join(self.args.workspace)
+        yield Bind(self.args.workspace, workspace_base, 'd')
 
         if path.isfile('/etc/localtime'):
             yield Bind('/etc/localtime', '/etc/localtime', 'fro')
