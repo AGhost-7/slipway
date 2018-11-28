@@ -10,7 +10,6 @@ image_name = build_image()
 class FakeArgs(object):
     def __init__(self, image):
         self.image = image
-        self.workspace = '/home/aghost-7/workspace'
 
 
 def test_volumes_init():

@@ -8,15 +8,17 @@ import os
 
 
 class FakeArgs(object):
-    def __init__(self):
+    def __init__(self, workspace):
         self.image = 'image-fixture'
         self.volume = []
         self.environment = []
+        self.workspace = workspace
 
 
-def create_container():
+def create_container(tmp_path):
     build_image()
-    args = FakeArgs()
+    workspace = tmp_path / 'workspace'
+    args = FakeArgs(str(workspace))
     client = docker.from_env()
     try:
         container = client.containers.get('slipway_image_fixture')
@@ -39,16 +41,16 @@ def create_container():
     return client.containers.get('slipway_image_fixture')
 
 
-def test_run():
-    container = create_container()
+def test_run(tmp_path):
+    container = create_container(tmp_path)
     code, output = container.exec_run('ps aux')
     assert code == 0
     assert 'tmux' in str(output)
     container.kill()
 
 
-def test_entrypoint():
-    container = create_container()
+def test_entrypoint(tmp_path):
+    container = create_container(tmp_path)
     code, output = container.exec_run('stat -c %U /test-volume')
     assert code == 0
     assert 'foobar' in str(output)

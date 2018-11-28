@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name = 'slipway',
     packages = find_packages(),
-    version = '0.4.2',
+    version = '0.5.0',
     description = 'CLI tool for managing development containers',
     author = 'Jonathan Boudreau',
     author_email = 'jonathan.boudreau.92@gmail.com',
