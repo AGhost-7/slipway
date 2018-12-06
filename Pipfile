@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 docker = "*"
+paramiko = "*"
 
 [dev-packages]
 ptpython = "==2.0.3"
