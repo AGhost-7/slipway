@@ -14,16 +14,21 @@ class Image(object):
             self._image = self.client.images.get(self.name)
         return self._image
 
+    def pull(self):
+        self.client.images.pull(self.name)
+
     def initialize(self):
         """
         Pulls the image if not present
         """
+        if self.args.pull:
+            self.pull()
         try:
             self._docker_image()
         except ImageNotFound:
             message = 'Image {} not found, attempting to pull down'
             print(message.format(self.name))
-            self.client.images.pull(self.name)
+            self.pull()
 
     @property
     def volumes(self):

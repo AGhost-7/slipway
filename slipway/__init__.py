@@ -13,6 +13,7 @@ def parse_args():
 
     start_parser = subparsers.add_parser('start')
     start_parser.add_argument('image')
+    start_parser.add_argument('--pull')
     start_parser.add_argument('--volume', action='append')
     start_parser.add_argument('--environment', action='append')
     start_parser.add_argument(
