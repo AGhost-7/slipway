@@ -14,6 +14,19 @@ class Image(object):
             self._image = self.client.images.get(self.name)
         return self._image
 
+    def stale(self):
+        """
+        Returns true if the image isn't in sync with what is in the registry.
+        """
+        distribution = self.client.api.inspect_distribution(self.name)
+        remote_digest = distribution['Descriptor']['digest']
+        for local_digest in self._docker_image().attrs['RepoDigests']:
+            remote_part = remote_digest.split(':')[1]
+            local_part = local_digest.split(':')[1]
+            if remote_part != local_part:
+                return True
+        return False
+
     def pull(self):
         self.client.images.pull(self.name)
 
@@ -21,14 +34,19 @@ class Image(object):
         """
         Pulls the image if not present
         """
-        if self.args.pull:
-            self.pull()
+        should_update = True
         try:
             self._docker_image()
         except ImageNotFound:
             message = 'Image {} not found, attempting to pull down'
             print(message.format(self.name))
             self.pull()
+            should_update = False
+        if self.args.pull and should_update:
+            print('Checking for updates')
+            if self.stale():
+                print('Updates available, pulling')
+                self.pull()
 
     @property
     def volumes(self):
