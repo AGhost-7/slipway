@@ -1,5 +1,6 @@
 from docker.errors import ImageNotFound
 
+from multiprocessing.dummy import Pool
 import math
 from os import path
 import re
@@ -92,9 +93,7 @@ class Image(object):
         return response.json()
 
     def _manifest_layer_size(self, token, manifest):
-        total = 0
-        layer_sizes = {}
-        for layer in manifest['fsLayers']:
+        def fetch(layer):
             digest = layer['blobSum']
             url = self._registry_base_url + '/v2/' + self._repository + \
                 '/blobs/' + digest
@@ -105,8 +104,14 @@ class Image(object):
                     raise Exception(message.format(response.status_code))
                 content_length = int(response.headers['content-length'])
                 id = digest.replace('sha256:', '')
-                layer_sizes[id] = content_length
-                total += content_length
+                return (id, content_length)
+        pool = Pool(10)
+        sizes = pool.map(fetch, manifest['fsLayers'])
+        layer_sizes = {}
+        total = 0
+        for (id, size) in sizes:
+            total += size
+            layer_sizes[id] = size
         return (total, layer_sizes)
 
     def _format_bytes(self, unformatted):
