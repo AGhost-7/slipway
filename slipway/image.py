@@ -1,5 +1,9 @@
 from docker.errors import ImageNotFound
+
+import math
 from os import path
+import re
+import requests
 
 
 class Image(object):
@@ -8,6 +12,26 @@ class Image(object):
         self.args = args
         self.name = args.image
         self._image = None
+
+        colon_parts = self.name.split(':')
+        if len(colon_parts) == 1:
+            self._tag = 'latest'
+        else:
+            self._tag = colon_parts[1]
+
+        slash_parts = colon_parts[0].split('/')
+
+        if len(slash_parts) == 3:
+            self._registry_base_url = slash_parts[0]
+        else:
+            self._registry_base_url = 'https://index.docker.io'
+
+        if len(slash_parts) == 1:
+            self._repository = 'library/' + slash_parts[0]
+        elif len(slash_parts) == 2:
+            self._repository = '/'.join(slash_parts)
+        else:
+            self._repository = '/'.join(slash_parts[:1])
 
     def _docker_image(self):
         if self._image is None:
@@ -27,22 +51,138 @@ class Image(object):
                 return True
         return False
 
+    def _registry_auth_url(self, base_url):
+        if base_url == 'https://index.docker.io':
+            return ('https://auth.docker.io/token', 'registry.docker.io')
+        else:
+            response = requests.get(
+                base_url + '/v2/_catalog')
+            if response.status_code != 401:
+                message = 'Unexpected status code while determining ' + \
+                    'authentication url'
+                raise Exception(message)
+            authenticate = response.headers['Www-authenticate']
+            auth_url = re.match('realm="([^,]+)"', authenticate)
+            service_url = re.match('service="([^,]+)"', authenticate)
+            return (auth_url, service_url)
+
+    def _urljoin(self, *parts):
+        return '/'.join(parts)
+
+    def _registry_token(self, auth_url, service_url):
+        scope = 'repository:' + self._repository + ':pull'
+        query = 'scope=' + scope + '&service=' + service_url
+        url = auth_url + '?' + query
+        response = requests.get(url)
+        if response.status_code != 200:
+            raise Exception(
+                'Failed to retrieve auth token')
+        return response.json()['token']
+
+    def _registry_manifest(self, token):
+        url = self._urljoin(
+            self._registry_base_url, 'v2', self._repository, 'manifests',
+            self._tag)
+        headers = {'authorization': 'Bearer ' + token}
+        response = requests.get(url, headers=headers)
+        if response.status_code != 200:
+            message = 'Unexpected {} response retrieving manifest'
+            formatted = message.format(response.status_code)
+            raise Exception(formatted)
+        return response.json()
+
+    def _manifest_layer_size(self, token, manifest):
+        total = 0
+        layer_sizes = {}
+        for layer in manifest['fsLayers']:
+            digest = layer['blobSum']
+            url = self._registry_base_url + '/v2/' + self._repository + \
+                '/blobs/' + digest
+            headers = {'authorization': 'Bearer ' + token}
+            with requests.get(url, headers=headers, stream=True) as response:
+                if response.status_code != 200:
+                    message = 'Unexpected {} response determining layer size'
+                    raise Exception(message.format(response.status_code))
+                content_length = int(response.headers['content-length'])
+                id = digest.replace('sha256:', '')
+                layer_sizes[id] = content_length
+                total += content_length
+        return (total, layer_sizes)
+
+    def _format_bytes(self, unformatted):
+        mb = (unformatted / 1024) / 1024
+        rounded = math.floor(mb * 10) / 10
+        return '{} MB'.format(rounded)
+
+    def _print_pull_status(self, total, downloaded, extracted):
+        formatted_total = self._format_bytes(total)
+        print('downloaded: {} / {}, extracted: {} / {}'.format(
+            self._format_bytes(downloaded),
+            formatted_total,
+            self._format_bytes(extracted),
+            formatted_total))
+
     def pull(self):
-        self.client.images.pull(self.name)
+        print('Computing total image size')
+        (auth_url, service_url) = self._registry_auth_url(
+            self._registry_base_url)
+        token = self._registry_token(auth_url, service_url)
+        manifest = self._registry_manifest(token)
+        (total, layer_sizes) = self._manifest_layer_size(token, manifest)
+        downloaded = 0
+        extracted = 0
+        downloaded_layers = {}
+        extracted_layers = {}
+        print('Downloading layers')
+        stream = self.client.api.pull(
+            self._repository, tag=self._tag, stream=True, decode=True)
+        for status in stream:
+            if status['status'] == 'Downloading':
+                detail = status['progressDetail']
+                if status['id'] in downloaded_layers:
+                    layer = downloaded_layers[status['id']]
+                    downloaded -= layer['current']
+                downloaded += detail['current']
+                downloaded_layers[status['id']] = detail
+                self._print_pull_status(total, downloaded, extracted)
+            elif status['status'] == 'Extracting':
+                if status['id'] in extracted_layers:
+                    layer = extracted_layers[status['id']]
+                    extracted -= layer['current']
+                extracted += detail['current']
+                extracted_layers[status['id']] = detail
+                self._print_pull_status(total, downloaded, extracted)
+            elif status['status'] == 'Already exists':
+                size = None
+                for layer in layer_sizes:
+                    if layer.startswith(status['id']):
+                        size = layer_sizes[layer]
+                        break
+                if size is None:
+                    raise Exception('Unexpected layer from daemon')
+                downloaded += size
+                extracted += size
+                self._print_pull_status(total, downloaded, extracted)
+
+    def exists(self):
+        """
+        Returns true if the image exists locally, false otherwise.
+        """
+        try:
+            self._docker_image()
+            return True
+        except ImageNotFound:
+            return False
 
     def initialize(self):
         """
         Pulls the image if not present
         """
-        should_update = True
-        try:
-            self._docker_image()
-        except ImageNotFound:
+        if not self.exists():
             message = 'Image {} not found, attempting to pull down'
             print(message.format(self.name))
             self.pull()
-            should_update = False
-        if self.args.pull and should_update:
+        elif self.args.pull:
             print('Checking for updates')
             if self.stale():
                 print('Updates available, pulling')
