@@ -25,6 +25,7 @@ class MultiBytesBar(object):
     BAR_WIDTH = 30
 
     def __init__(self, bars, file=stdout):
+        self._started = False
         self._bars = bars
         self._bar_states = {}
         self._formatted_titles = {}
@@ -41,9 +42,9 @@ class MultiBytesBar(object):
         """
         Sets the terminal in the correct mode to start the progress bar.
         """
-        # hide the cursor
-        self._put('\x1b[?25l')
+        self._hide_cursor()
         self.draw()
+        self._started = True
 
     def _format_title(self, bar_name):
         bar = self._bars[bar_name]
@@ -79,12 +80,20 @@ class MultiBytesBar(object):
             self._put(self.EMPTY_CHAR)
         self._put('\n')
 
+    def _show_cursor(self):
+        self._put('\x1b[?25h')
+
+    def _hide_cursor(self):
+        self._put('\x1b[?25l')
+
+    def _clear_line(self):
+        self._put('\x1b[0K')
+
     def end(self):
         """
         Returns the terminal to the original mode.
         """
-        # show the cursor
-        self._put('\x1b[?25h')
+        self._show_cursor()
         self._file.flush()
 
     def increment(self, bar_name, bytes):
@@ -99,6 +108,9 @@ class MultiBytesBar(object):
         Draw all bars.
         """
         for bar_name in self._bars:
+            if self._started:
+                print('\033[0K', end='', file=self._file)
+                # self._put('\r\x1b[K')
             self._draw_bar(bar_name)
         self._file.flush()
 
@@ -115,15 +127,41 @@ if __name__ == "__main__":
         #     'title': 'Extracted [{state} / {max} MB]: '
         # }
     })
-    bar.start()
+    #bar._hide_cursor()
+    #bar._file.flush()
+    #bar.start()
     import time
     time.sleep(1)
     try:
-        bar.increment('downloaded', 10 * MB_RATIO)
-        bar.draw()
+        bar._put('hello!\n\r')
+        bar._file.flush()
         time.sleep(1)
-        bar.increment('downloaded', 10 * MB_RATIO)
+
+        bar._put('world!\r')
+        bar._file.flush()
+        time.sleep(1)
+
+        bar._put('\x1b[1A')
+        bar._file.flush()
+        time.sleep(1)
+
+        bar._clear_line()
+        bar._file.flush()
+        time.sleep(1)
+
+        bar._put('\x1b[1B')
+        bar._file.flush()
+        time.sleep(1)
+
+        bar._clear_line()
+        bar._file.flush()
+        time.sleep(1)
+        # bar.increment('downloaded', 10 * MB_RATIO)
+        #bar.draw()
+        #time.sleep(1)
+        # bar.increment('downloaded', 10 * MB_RATIO)
         # bar.increment('extracted', 33.3 * MB_RATIO)
-        bar.draw()
+        #bar.draw()
     finally:
-        bar.end()
+        bar._show_cursor()
+        bar._file.flush()
