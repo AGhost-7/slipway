@@ -29,6 +29,8 @@ class Container(object):
         arguments = [
             'docker',
             'run',
+            # Required fpr strace and other debugging tools to work.
+            '--cap-add', 'SYS_PTRACE',
             '--net=host',
             '--user', 'root',
             '--rm',
