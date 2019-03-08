@@ -5,6 +5,13 @@ import math
 from os import path
 import re
 import requests
+from sys import stdout
+
+
+# ANSI (terminal) escape sequences
+CLEAR_LINE = '\x1b[0K'
+SHOW_CURSOR = '\x1b[?25h'
+HIDE_CURSOR = '\x1b[?25l'
 
 
 class Image(object):
@@ -121,26 +128,24 @@ class Image(object):
 
     def _print_pull_status(self, total, downloaded, extracted):
         formatted_total = self._format_bytes(total)
-        print('downloaded: {} / {}, extracted: {} / {}'.format(
+        if self._pull_status_started:
+            stdout.write(CLEAR_LINE)
+            stdout.flush()
+        else:
+            self._pull_status_started = True
+
+        stdout.write('Downloaded: {} / {}, Extracted: {} / {}\r'.format(
             self._format_bytes(downloaded),
             formatted_total,
             self._format_bytes(extracted),
             formatted_total))
+        stdout.flush()
 
-    def pull(self):
-        print('Computing total image size')
-        (auth_url, service_url) = self._registry_auth_url(
-            self._registry_base_url)
-        token = self._registry_token(auth_url, service_url)
-        manifest = self._registry_manifest(token)
-        (total, layer_sizes) = self._manifest_layer_size(token, manifest)
+    def _consume_pull_status_stream(self, total, layer_sizes, stream):
         downloaded = 0
         extracted = 0
         downloaded_layers = {}
         extracted_layers = {}
-        print('Downloading layers')
-        stream = self.client.api.pull(
-            self._repository, tag=self._tag, stream=True, decode=True)
         for status in stream:
             if status['status'] == 'Downloading':
                 detail = status['progressDetail']
@@ -168,6 +173,26 @@ class Image(object):
                 downloaded += size
                 extracted += size
                 self._print_pull_status(total, downloaded, extracted)
+        pass
+
+    def pull(self):
+        print('Computing total image size')
+        (auth_url, service_url) = self._registry_auth_url(
+            self._registry_base_url)
+        token = self._registry_token(auth_url, service_url)
+        manifest = self._registry_manifest(token)
+        (total, layer_sizes) = self._manifest_layer_size(token, manifest)
+        self._pull_status_started = False
+        print('Downloading layers')
+        stream = self.client.api.pull(
+            self._repository, tag=self._tag, stream=True, decode=True)
+        try:
+            stdout.write(HIDE_CURSOR)
+            stdout.flush()
+            self._consume_pull_status_stream(total, layer_sizes, stream)
+        finally:
+            stdout.write(SHOW_CURSOR)
+            stdout.flush()
 
     def exists(self):
         """
