@@ -173,7 +173,6 @@ class Image(object):
                 downloaded += size
                 extracted += size
                 self._print_pull_status(total, downloaded, extracted)
-        pass
 
     def pull(self):
         print('Computing total image size')
