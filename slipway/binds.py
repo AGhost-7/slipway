@@ -32,7 +32,22 @@ class Binds(object):
                 if 'd' in bind.type:
                     os.makedirs(bind.host_path)
                 elif 'f' in bind.type:
+                    dirname = path.dirname(bind.host_path)
+                    if not path.exists(dirname):
+                        os.makedirs(path.dirname(bind.host_path))
                     open(bind.host_path, 'w+').close()
+
+    def _gpg_binds(self):
+        uid = pwd.getpwnam(environ['USER']).pw_uid
+        gnupg_socket_path = path.join('/run/user', str(uid), 'gnupg')
+        if path.exists(gnupg_socket_path):
+            # FIXME: how to get uid of user in container?
+            yield Bind(gnupg_socket_path, '/run/user/1000/gnupg', 'dro')
+
+        gnupg_path = path.join(environ['HOME'], '.gnupg')
+        if path.exists(gnupg_path):
+            container_path = path.join(self.image.home, '.gnupg')
+            yield Bind(gnupg_path, container_path, 'd')
 
     def list(self):
         """
@@ -40,7 +55,11 @@ class Binds(object):
         """
         home_mappings = [
             ('d', '.ssh'),
-            ('f', '.gitconfig')
+            ('f', '.gitconfig'),
+            # TODO: find a way to delegate to the image instead.
+            ('f', '.yarnrc'),
+            ('f', '.cargo/credentials'),
+            ('f', '.pypirc')
         ]
         for type, mapping in home_mappings:
             host_path = path.join(environ['HOME'], mapping)
@@ -56,16 +75,7 @@ class Binds(object):
         if path.exists('/tmp/.X11-unix'):
             yield Bind('/tmp/.X11-unix', '/tmp/.X11-unix', 'fro')
 
-        uid = pwd.getpwnam(environ['USER']).pw_uid
-        gnupg_socket_path = path.join('/run/user', str(uid), 'gnupg')
-        if path.exists(gnupg_socket_path):
-            # FIXME: how to get uid of user in container?
-            yield Bind(gnupg_socket_path, '/run/user/1000/gnupg', 'dro')
-
-        gnupg_path = path.join(environ['HOME'], '.gnupg')
-        if path.exists(gnupg_path):
-            container_path = path.join(self.image.home, '.gnupg')
-            yield Bind(gnupg_path, container_path, 'd')
+        yield from self._gpg_binds()
 
         for volume in self.args.volume or []:
             parts = volume.split(':')
