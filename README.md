@@ -18,6 +18,8 @@ correct it automatically.
 - Maps your `~/workspace` directory into the container (can be overriden).
 - Sets the timezone to match the host
 - Sets your gitignore to match the host
+- Maps credentials files for certain package managers to the container (yarn,
+cargo, etc).
 
 ## Getting Started
 Install slipway:
