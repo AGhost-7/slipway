@@ -13,7 +13,7 @@ setup(
     keywords=['docker', 'development'],
     classifiers=[],
     install_requires=[
-        'docker >= 3.0.0'
+        'docker >= 4.0.0'
     ],
     entry_points={
         'console_scripts': [
