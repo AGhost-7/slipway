@@ -1,10 +1,10 @@
 sudo: true
-dist: xenial
+dist: bionic
 services: docker
 before_install:
   - lsb_release -a
   - sudo apt-get update
-  - sudo apt-get install --no-install-recommends -y python3 python3-pip
-  - python3 -m pip install --user pipenv
-install: pipenv install --dev
-script: pipenv run pytest
+  - sudo apt-get install --no-install-recommends -y python3 python3-pip python3-venv
+  - python3 -m pip install --user poetry
+install: poetry install
+script: poetry run pytest
