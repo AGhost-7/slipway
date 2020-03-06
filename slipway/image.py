@@ -2,10 +2,11 @@ from docker.errors import ImageNotFound
 
 from multiprocessing.dummy import Pool
 import math
-from os import path
+from os import path, makedirs
 import re
 import requests
 from sys import stdout
+from datetime import datetime
 
 
 # ANSI (terminal) escape sequences
@@ -203,6 +204,34 @@ class Image(object):
         except ImageNotFound:
             return False
 
+    def _pulled_today(self):
+        """
+        Returns true is the last successful pull was performed today.
+        """
+        last_stale_path = path.join(
+            self.args.data_directory, 'last_stale_check')
+        if path.exists(last_stale_path):
+            with open(last_stale_path) as file_descriptor:
+                content = file_descriptor.read()
+                last_pull = datetime.strptime(content, '%Y-%m-%d')
+                now = datetime.now()
+                return now.day == last_pull.day \
+                    and now.month == last_pull.month \
+                    and now.year == last_pull.year
+
+        return False
+
+    def _create_stale_check_file(self):
+        """
+        Creates the last_pull file which after a successful pull was performed.
+        """
+        makedirs(self.args.data_directory, exist_ok=True)
+        content = datetime.now().strftime('%Y-%m-%d')
+        last_stale_path = path.join(
+            self.args.data_directory, 'last_stale_check')
+        with open(last_stale_path, 'w+') as file_descriptor:
+            file_descriptor.write(content)
+
     def initialize(self):
         """
         Pulls the image if not present
@@ -211,11 +240,15 @@ class Image(object):
             message = 'Image {} not found, attempting to pull down'
             print(message.format(self.name))
             self.pull()
-        elif self.args.pull:
+            self._create_stale_check_file()
+        elif self.args.pull and not (
+                self.args.pull_daily and self._pulled_today()):
             print('Checking for updates')
             if self.stale():
                 print('Updates available, pulling')
                 self.pull()
+                print('done pulling')
+            self._create_stale_check_file()
 
     @property
     def volumes(self):

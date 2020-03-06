@@ -8,12 +8,16 @@ from .container import Container
 
 def parse_args():
     parser = ArgumentParser()
+    parser.add_argument(
+        '--data-directory',
+        default=path.join(environ['HOME'], '.local/share/slipway'))
     subparsers = parser.add_subparsers(dest='mode')
     subparsers.required = True
 
     start_parser = subparsers.add_parser('start')
     start_parser.add_argument('image')
     start_parser.add_argument('--pull', action='store_true')
+    start_parser.add_argument('--pull-daily', action='store_true')
     start_parser.add_argument('--volume', '-v', action='append')
     start_parser.add_argument('--environment', '-e', action='append')
     start_parser.add_argument(

@@ -7,8 +7,9 @@ client = docker.from_env()
 
 
 class FakeArgs(object):
-    def __init__(self, image):
+    def __init__(self, image, data_directory=None):
         self.image = image
+        self.data_directory = data_directory
 
 
 def test_initialize():
@@ -21,6 +22,14 @@ def test_initialize():
     image = Image(client, args)
     image.initialize()
     assert client.images.get('busybox') is not None
+
+
+def test_initialize_daily(tmp_path):
+    pass
+
+
+def test_initialize_daily_stale():
+    pass
 
 
 def test_volumes():
