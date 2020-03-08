@@ -16,6 +16,7 @@ def parse_args():
 
     start_parser = subparsers.add_parser('start')
     start_parser.add_argument('image')
+    start_parser.add_argument('--mount-docker', action='store_true')
     start_parser.add_argument('--pull', action='store_true')
     start_parser.add_argument('--pull-daily', action='store_true')
     start_parser.add_argument('--volume', '-v', action='append')

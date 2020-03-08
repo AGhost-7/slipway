@@ -25,11 +25,21 @@ class Container(object):
     def _volumes_env(self):
         return ','.join(list(map(lambda vol: vol.path, self.volumes.list())))
 
+    def _append_docker_gid(self, arguments):
+        with open('/etc/group') as file_descriptor:
+            content = file_descriptor.read()
+            for line in content.split('\n'):
+                parts = line.split(':')
+                if parts[0] == 'docker':
+                    arguments.append('-e')
+                    arguments.append('SLIPWAY_DOCKER_GID={}'.format(parts[2]))
+                    break
+
     def _run_arguments(self):
         arguments = [
             'docker',
             'run',
-            # Required fpr strace and other debugging tools to work.
+            # Required for strace and other debugging tools to work.
             '--cap-add', 'SYS_PTRACE',
             '--net=host',
             '--user', 'root',
@@ -45,6 +55,11 @@ class Container(object):
             '-v', self._entrypoint_script() + ':/slipway-entrypoint.py:ro',
             '--entrypoint', 'python3'
         ]
+
+        if self.args.mount_docker:
+            arguments.append('-v')
+            arguments.append('/run/docker.sock:/run/docker.sock')
+            self._append_docker_gid(arguments)
 
         for env in self.args.environment or []:
             arguments.append('-e')
