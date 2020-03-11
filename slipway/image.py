@@ -7,6 +7,7 @@ import re
 import requests
 from sys import stdout
 from datetime import datetime
+from .util import snake_case
 
 
 # ANSI (terminal) escape sequences
@@ -209,7 +210,7 @@ class Image(object):
         Returns true is the last successful pull was performed today.
         """
         last_stale_path = path.join(
-            self.args.data_directory, 'last_stale_check')
+            self.args.data_directory, 'last_stale_check', snake_case(self.name))
         if path.exists(last_stale_path):
             with open(last_stale_path) as file_descriptor:
                 content = file_descriptor.read()
@@ -225,10 +226,10 @@ class Image(object):
         """
         Creates the last_pull file which after a successful pull was performed.
         """
-        makedirs(self.args.data_directory, exist_ok=True)
+        stale_check_dir = path.join(self.args.data_directory, 'last_stale_check')
+        makedirs(stale_check_dir, exist_ok=True)
         content = datetime.now().strftime('%Y-%m-%d')
-        last_stale_path = path.join(
-            self.args.data_directory, 'last_stale_check')
+        last_stale_path = path.join(stale_check_dir, snake_case(self.name))
         with open(last_stale_path, 'w+') as file_descriptor:
             file_descriptor.write(content)
 
