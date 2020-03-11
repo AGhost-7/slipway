@@ -1,0 +1,8 @@
+alias:
+  mini: busybox
+mount_docker: False
+pull: True
+pull_daily: True
+environment:
+  - FORWARD
+  - STATIC=1

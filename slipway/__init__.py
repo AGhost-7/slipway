@@ -4,37 +4,44 @@ from argparse import ArgumentParser
 
 import docker
 from .container import Container
+from .configuration import Configuration
 
 
-def parse_args():
+def parse_args(configuration):
     parser = ArgumentParser()
     parser.add_argument(
         '--data-directory',
-        default=path.join(environ['HOME'], '.local/share/slipway'))
+        default=configuration.data_directory)
     subparsers = parser.add_subparsers(dest='mode')
     subparsers.required = True
 
     start_parser = subparsers.add_parser('start')
     start_parser.add_argument('image')
-    start_parser.add_argument('--mount-docker', action='store_true')
-    start_parser.add_argument('--pull', action='store_true')
-    start_parser.add_argument('--pull-daily', action='store_true')
-    start_parser.add_argument('--volume', '-v', action='append')
-    start_parser.add_argument('--environment', '-e', action='append')
+    start_parser.add_argument('--mount-docker', action='store_true', default=configuration.mount_docker)
+    start_parser.add_argument('--pull', action='store_true', default=configuration.pull)
+    start_parser.add_argument('--pull-daily', action='store_true', default=configuration.pull_daily)
+    start_parser.add_argument('--volume', '-v', action='append', default=configuration.volume)
+    start_parser.add_argument('--environment', '-e', action='append', default=configuration.environment)
     start_parser.add_argument(
-        '--workspace', default=path.join(environ['HOME'], 'workspace'))
+        '--workspace', default=configuration.workspace)
 
     purge_parser = subparsers.add_parser('purge')
     purge_parser.add_argument('image')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.image in configuration.alias:
+        args.image = configuration.alias[args.image]
+
+    return args
 
 
 def main():
     if sys.version_info.major < 3:
         print('Python 2 is not supported')
         sys.exit(1)
-    args = parse_args()
+    configuration = Configuration(environ['HOME'])
+    args = parse_args(configuration)
     client = docker.from_env()
     container = Container(client, args)
     if args.mode == 'start':
