@@ -1,5 +1,6 @@
 import pwd
 import os
+from sys import platform
 from os import environ, path
 
 
@@ -70,7 +71,7 @@ class Binds(object):
         workspace_path = path.join(self.image.home, workspace_base)
         yield Bind(self.args.workspace, workspace_path, 'd')
 
-        if path.isfile('/etc/localtime'):
+        if path.isfile('/etc/localtime') and platform != 'darwin':
             yield Bind('/etc/localtime', '/etc/localtime', 'fro')
         if path.exists('/tmp/.X11-unix'):
             yield Bind('/tmp/.X11-unix', '/tmp/.X11-unix', 'fro')

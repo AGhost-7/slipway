@@ -13,6 +13,7 @@ class FakeArgs(object):
         self.volume = []
         self.environment = []
         self.workspace = workspace
+        self.mount_docker = False
 
 
 def create_container(tmp_path):

@@ -5,7 +5,7 @@ before_install:
   - lsb_release -a
   - sudo apt-get update
   - sudo apt-get install --no-install-recommends -y python3 python3-pip python3-venv
-  - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+  - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3
   - echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
   - . ~/.bashrc
 install: poetry install
