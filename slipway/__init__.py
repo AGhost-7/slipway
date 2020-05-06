@@ -41,6 +41,7 @@ def main():
         print('Python 2 is not supported')
         sys.exit(1)
     configuration = Configuration(environ['HOME'])
+    configuration.load()
     args = parse_args(configuration)
     client = docker.from_env()
     container = Container(client, args)
