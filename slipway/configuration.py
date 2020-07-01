@@ -1,6 +1,7 @@
 import yaml
 from os import path
 
+
 class Configuration (object):
     def __init__(self, home_path):
         self.config_path = path.join(home_path, '.config/slipway.yaml')
@@ -12,6 +13,7 @@ class Configuration (object):
         self.pull = False
         self.pull_daily = False
         self.mount_docker = False
+        self.runtime = 'docker'
 
     def load(self):
         if path.exists(self.config_path):
@@ -32,3 +34,5 @@ class Configuration (object):
                     self.pull_daily = config['pull_daily']
                 if 'mount_docker' in config:
                     self.mount_docker = config['mount_docker']
+                if 'runtime' in config:
+                    self.runtime = config['runtime']

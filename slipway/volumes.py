@@ -25,12 +25,12 @@ class Volumes(object):
         """
         Clears all volumes tied to the given arguments
         """
-        docker_volumes = self.client.volumes.list()
+        current_volumes = self.list_volume_names()
         for volume in self.list():
             found = None
-            for docker_volume in docker_volumes:
-                if volume.name == docker_volume.name:
-                    found = docker_volume
+            for volume_name in current_volumes:
+                if volume.name == volume_name:
+                    found = volume_name
             if found is not None:
                 found.remove()
 
@@ -38,11 +38,11 @@ class Volumes(object):
         """
         Checks if the required volume are present and creates them if missing.
         """
-        docker_volumes = self.client.volumes.list()
+        current_volume_names = self.client.list_volume_names()
         for volume in self.list():
             exist = False
-            for docker_volume in docker_volumes:
-                if volume.name == docker_volume.name:
+            for volume_name in current_volume_names:
+                if volume.name == volume_name:
                     exist = True
             if not exist:
-                self.client.volumes.create(volume.name)
+                self.client.create_volume(volume.name)

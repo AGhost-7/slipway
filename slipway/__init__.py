@@ -1,10 +1,10 @@
-from os import environ, path
+from os import environ
 import sys
 from argparse import ArgumentParser
 
-import docker
 from .container import Container
 from .configuration import Configuration
+from .client import PodmanClient, DockerClient
 
 
 def parse_args(configuration):
@@ -17,11 +17,23 @@ def parse_args(configuration):
 
     start_parser = subparsers.add_parser('start')
     start_parser.add_argument('image')
-    start_parser.add_argument('--mount-docker', action='store_true', default=configuration.mount_docker)
-    start_parser.add_argument('--pull', action='store_true', default=configuration.pull)
-    start_parser.add_argument('--pull-daily', action='store_true', default=configuration.pull_daily)
-    start_parser.add_argument('--volume', '-v', action='append', default=configuration.volume)
-    start_parser.add_argument('--environment', '-e', action='append', default=configuration.environment)
+    start_parser.add_argument(
+        '--mount-docker',
+        action='store_true',
+        default=configuration.mount_docker)
+    start_parser.add_argument(
+            '--pull', action='store_true', default=configuration.pull)
+    start_parser.add_argument(
+        '--pull-daily', action='store_true', default=configuration.pull_daily)
+    start_parser.add_argument(
+        '--volume', '-v', action='append', default=configuration.volume)
+    start_parser.add_argument(
+        '--environment',
+        '-e',
+        action='append',
+        default=configuration.environment)
+    start_parser.add_argument(
+        '--runtime', '-r', default=configuration.runtime)
     start_parser.add_argument(
         '--workspace', default=configuration.workspace)
 
@@ -43,7 +55,11 @@ def main():
     configuration = Configuration(environ['HOME'])
     configuration.load()
     args = parse_args(configuration)
-    client = docker.from_env()
+    client = None
+    if args.runtime == 'podman':
+        client = PodmanClient()
+    else:
+        client = DockerClient()
     container = Container(client, args)
     if args.mode == 'start':
         container.image.initialize()

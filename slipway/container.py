@@ -36,8 +36,13 @@ class Container(object):
                     break
 
     def _run_arguments(self):
-        arguments = [
-            'docker',
+        arguments = []
+        if self.args.runtime == 'podman':
+            arguments.append('podman')
+        else:
+            arguments.append('docker')
+
+        arguments.extend([
             'run',
             # Required for strace and other debugging tools to work.
             '--cap-add', 'SYS_PTRACE',
@@ -52,9 +57,13 @@ class Container(object):
             '-e', 'DISPLAY',
             '-e', 'SLIPWAY_USER={}'.format(self.image.user),
             '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
-            '-v', self._entrypoint_script() + ':/slipway-entrypoint.py:ro',
-            '--entrypoint', 'python3'
-        ]
+        ])
+
+        if self.args.runtime == 'docker':
+            arguments.extend([
+                '-v', self._entrypoint_script() + ':/slipway-entrypoint.py:ro',
+                '--entrypoint', 'python3'
+            ])
 
         if self.args.mount_docker:
             arguments.append('-v')
@@ -75,13 +84,17 @@ class Container(object):
         for volume in self.volumes.list():
             arguments.append('--mount')
             arguments.append(
-                'source={},target={}'.format(volume.name, volume.path))
+                'type=volume,source={},target={}'
+                .format(volume.name, volume.path))
 
         arguments.append(self.image.name)
-        arguments.append('/slipway-entrypoint.py')
+        if self.args.runtime == 'docker':
+            arguments.append('/slipway-entrypoint.py')
         arguments.append('tmux')
         arguments.append('new')
+
+        print('arguments {}'.format(arguments))
         return arguments
 
     def run(self):
-        os.execvp('docker', self._run_arguments())
+        os.execvp(self.args.runtime, self._run_arguments())
