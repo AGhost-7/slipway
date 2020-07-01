@@ -93,7 +93,6 @@ class Container(object):
         arguments.append('tmux')
         arguments.append('new')
 
-        print('arguments {}'.format(arguments))
         return arguments
 
     def run(self):
