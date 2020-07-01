@@ -4,8 +4,10 @@ from test.util import build_image
 from slipway.image import Image
 from docker.errors import ImageNotFound
 import docker
+from slipway.client import DockerClient
 
-client = docker.from_env()
+docker_client = docker.from_env()
+client = DockerClient()
 
 
 class FakeArgs(object):
@@ -14,18 +16,19 @@ class FakeArgs(object):
         self.data_directory = data_directory
         self.pull = False
         self.pull_daily = False
+        self.runtime = 'docker'
 
 
 def test_initialize(tmp_path):
     try:
-        client.images.get('busybox')
-        client.images.remove('busybox')
+        docker_client.images.get('busybox')
+        docker_client.images.remove('busybox')
     except ImageNotFound:
         pass
     args = FakeArgs('busybox', tmp_path)
     image = Image(client, args)
     image.initialize()
-    assert client.images.get('busybox') is not None
+    assert docker_client.images.get('busybox') is not None
 
 
 def test_initialize_daily(tmp_path):
@@ -44,7 +47,8 @@ def test_initialize_daily_stale(tmp_path):
     image = Image(client, args)
     image.initialize()
     last_pull = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-    with open(path.join(tmp_path, 'last_stale_check/busybox'), 'w') as file_descriptor:
+    stale_path = path.join(tmp_path, 'last_stale_check/busybox')
+    with open(stale_path, 'w') as file_descriptor:
         file_descriptor.write(last_pull)
     assert not image._pulled_today()
 

@@ -26,6 +26,11 @@ class PodmanClient(object):
         )
         return json.loads(str(result.stdout, 'utf8').strip())
 
+    def remove_volume(self, name):
+        result = subprocess.run(
+            ['podman', 'volumes', 'remove', name])
+        assert(result.returncode == 0)
+
     def image_exists(self, name):
         result = subprocess.run(
             ['podman', 'image', 'inspect', name],

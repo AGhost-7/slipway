@@ -1,19 +1,22 @@
 import docker
+from slipway.client import DockerClient
 from slipway.volumes import Volumes
 from slipway.image import Image
 from test.util import build_image
 
-client = docker.from_env()
+docker_client = docker.from_env()
+client = DockerClient()
 image_name = build_image()
 
 
 class FakeArgs(object):
     def __init__(self, image):
         self.image = image
+        self.runtime = 'docker'
 
 
 def test_volumes_init():
-    for volume in client.volumes.list():
+    for volume in docker_client.volumes.list():
         if volume.name == 'slipway_image_fixture_test_volume':
             volume.remove()
     args = FakeArgs('image-fixture')
@@ -22,7 +25,7 @@ def test_volumes_init():
     volumes.initialize()
     matches = [
         volume
-        for volume in client.volumes.list()
+        for volume in docker_client.volumes.list()
         if volume.name == 'slipway_image_fixture_test_volume'
     ]
     assert len(matches) == 1
@@ -33,7 +36,7 @@ def test_volumes_purge():
     args = FakeArgs('image-fixture')
     image = Image(client, args)
     volumes = Volumes(client, args, image)
-    client.volumes.create('slipway_image_fixture_test_volume')
+    docker_client.volumes.create('slipway_image_fixture_test_volume')
     volumes.purge()
-    for volume in client.volumes.list():
+    for volume in docker_client.volumes.list():
         assert volume.name != 'slipway_image_fixture_test_volume'

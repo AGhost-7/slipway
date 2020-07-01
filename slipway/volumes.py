@@ -25,14 +25,14 @@ class Volumes(object):
         """
         Clears all volumes tied to the given arguments
         """
-        current_volumes = self.list_volume_names()
+        current_volumes = self.client.list_volume_names()
         for volume in self.list():
             found = None
             for volume_name in current_volumes:
                 if volume.name == volume_name:
                     found = volume_name
             if found is not None:
-                found.remove()
+                self.client.remove_volume(found)
 
     def initialize(self):
         """

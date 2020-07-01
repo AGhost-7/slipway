@@ -1,9 +1,9 @@
 
-import docker
 from slipway.binds import Binds
 from slipway.image import Image
+from slipway.client import DockerClient
 
-client = docker.from_env()
+client = DockerClient()
 
 
 class FakeArgs(object):
@@ -11,6 +11,7 @@ class FakeArgs(object):
         self.image = 'image-fixture'
         self.volume = volume
         self.workspace = workspace
+        self.runtime = 'docker'
 
 
 def test_initialize(tmp_path):
