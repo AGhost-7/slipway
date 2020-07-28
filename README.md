@@ -55,6 +55,39 @@ use-agent
 pinentry-mode loopback
 ```
 
+## Using rootless containers
+Slipway supports podman, which is an alternative implementation to docker that
+has much better security. There are additional steps to setting this up, which
+is why it isn't the default.
+
+Start by installing [podman](https://podman.io/getting-started/installation).
+
+Setup the registry configuration:
+```bash
+mkdir -p ~/.config/containers
+echo 'unqualified-search-registries = ["docker.io"]' > ~/.config/containers/registries.conf
+```
+
+Install some additional dependencies:
+```bash
+sudo apt-get install -y fuse-overlayfs slirp4netns
+```
+
+Grant your user some [subuids][subuids]/[subgids][subgids]:
+```bash
+echo "$USER:100000:40000" | sudo tee -a /etc/subuid
+echo "$USER:100000:40000" | sudo tee -a /etc/subgid
+podman system migrate
+```
+
+And then you can run your containers with podman instead!
+```bash
+slipway start --runtime podman aghost7/nvim:bionic
+```
+
+[subuid]: https://www.man7.org/linux/man-pages/man5/subuid.5.html
+[subgid]: https://www.man7.org/linux/man-pages/man5/subgid.5.html
+
 ## Developing
 Requirements:
 - python 3
