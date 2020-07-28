@@ -56,18 +56,16 @@ pinentry-mode loopback
 ```
 
 ## Developing
-Install pipenv:
-```
-python3 -m pip install --user --upgrade pipenv
-```
+Requirements:
+- python 3
+- poetry
 
-Install dependencies and load virtualenv:
+Install dependencies:
 ```
-pipenv install --dev
-pipenv shell
+poetry install
 ```
 
 Run tests:
 ```
-pytest --capture=no
+poetry run pytest
 ```
