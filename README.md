@@ -75,8 +75,8 @@ sudo apt-get install -y fuse-overlayfs slirp4netns
 
 Grant your user some [subuids][subuids]/[subgids][subgids]:
 ```bash
-echo "$USER:100000:40000" | sudo tee -a /etc/subuid
-echo "$USER:100000:40000" | sudo tee -a /etc/subgid
+echo "$USER:100000:600000" | sudo tee -a /etc/subuid
+echo "$USER:100000:600000" | sudo tee -a /etc/subgid
 podman system migrate
 ```
 
