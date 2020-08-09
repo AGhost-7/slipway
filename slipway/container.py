@@ -65,6 +65,12 @@ class Container(object):
                 '--entrypoint', 'python3'
             ])
 
+        if self.args.runtime == 'podman':
+            arguments.extend([
+                # this is needed for traceroute, nmap, etc.
+                '--cap-add', 'CAP_NET_ADMIN'
+            ])
+
         if self.args.mount_docker:
             arguments.append('-v')
             arguments.append('/run/docker.sock:/run/docker.sock')
