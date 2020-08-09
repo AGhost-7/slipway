@@ -37,14 +37,14 @@ The `start` command line options can be specified in a configuration file
 under `~/.config/slipway.yaml`.
 ```yml
 pull: true
-pull_daily:
+pull_daily: true
 runtime: podmand
 alias:
-	devops:
-		image: aghost7/devops:focal
-		network: slirp4netns
-		environment:
-		- AWS_ACCESS_KEY_ID
+  devops:
+    image: aghost7/devops:focal
+    network: slirp4netns
+    environment:
+    - AWS_ACCESS_KEY_ID
 ```
 
 You can then use your `devops` alias in place of the image name:
