@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "slipway"
-version = "0.10.0"
+version = "0.10.1"
 description = "CLI tool for managing development containers"
 authors = ["AGhost-7 <jonathan.boudreau.92@gmail.com>"]
 license = "MIT"

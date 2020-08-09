@@ -32,6 +32,26 @@ Run an example image:
 slipway start aghost7/nodejs-dev:bionic-carbon
 ```
 
+## Configuration
+The `start` command line options can be specified in a configuration file
+under `~/.config/slipway.yaml`.
+```yml
+pull: true
+pull_daily:
+runtime: podmand
+alias:
+	devops:
+		image: aghost7/devops:focal
+		network: slirp4netns
+		environment:
+		- AWS_ACCESS_KEY_ID
+```
+
+You can then use your `devops` alias in place of the image name:
+```bash
+slipway start devops
+```
+
 ## Optional GnuPG (GPG) Support
 On your host, you will need to have gpg configured with the daemon running.
 Slipway will detect that gpg is running and will automatically create a bind
@@ -93,7 +113,7 @@ This is actually because slipway defaults to host-based networking. When using
 rootless containers, you need to change the network used to `slirp4netns`.
 
 ```bash
-slipway start --network slirp4netns aghost7/devops:focal 
+slipway start --network slirp4netns aghost7/devops:focal
 ```
 
 ## Developing
