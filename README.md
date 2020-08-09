@@ -88,6 +88,14 @@ slipway start --runtime podman aghost7/nvim:bionic
 [subuid]: https://www.man7.org/linux/man-pages/man5/subuid.5.html
 [subgid]: https://www.man7.org/linux/man-pages/man5/subgid.5.html
 
+### I can't use networking tools (nmap, traceroute, etc) with rootless containers
+This is actually because slipway defaults to host-based networking. When using
+rootless containers, you need to change the network used to `slirp4netns`.
+
+```bash
+slipway start --network slirp4netns aghost7/devops:focal 
+```
+
 ## Developing
 Requirements:
 - python 3

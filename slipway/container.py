@@ -46,7 +46,6 @@ class Container(object):
             'run',
             # Required for strace and other debugging tools to work.
             '--cap-add', 'SYS_PTRACE',
-            '--user', 'root',
             '--rm',
             '-ti',
             '--detach-keys', 'ctrl-q,ctrl-q',
@@ -54,13 +53,14 @@ class Container(object):
             '-e', 'GH_USER',
             '-e', 'GH_PASS',
             '-e', 'DISPLAY',
-            '-e', 'SLIPWAY_USER={}'.format(self.image.user),
-            '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
         ])
         arguments.append('--network={}'.format(self.args.network))
 
         if self.args.runtime == 'docker':
             arguments.extend([
+                '--user', 'root',
+                '-e', 'SLIPWAY_USER={}'.format(self.image.user),
+                '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
                 '-v', self._entrypoint_script() + ':/slipway-entrypoint.py:ro',
                 '--entrypoint', 'python3'
             ])
