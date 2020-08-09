@@ -46,7 +46,6 @@ class Container(object):
             'run',
             # Required for strace and other debugging tools to work.
             '--cap-add', 'SYS_PTRACE',
-            '--net=host',
             '--user', 'root',
             '--rm',
             '-ti',
@@ -58,6 +57,7 @@ class Container(object):
             '-e', 'SLIPWAY_USER={}'.format(self.image.user),
             '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
         ])
+        arguments.append('--network={}'.format(self.args.network))
 
         if self.args.runtime == 'docker':
             arguments.extend([
@@ -67,8 +67,7 @@ class Container(object):
 
         if self.args.runtime == 'podman':
             arguments.extend([
-                # this is needed for traceroute, nmap, etc.
-                '--cap-add', 'CAP_NET_ADMIN'
+                '--userns=keep-id'
             ])
 
         if self.args.mount_docker:

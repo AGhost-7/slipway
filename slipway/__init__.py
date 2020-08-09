@@ -36,6 +36,8 @@ def parse_args(configuration):
         '--runtime', '-r', default=configuration.runtime)
     start_parser.add_argument(
         '--workspace', default=configuration.workspace)
+    start_parser.add_argument(
+        '--network', default=configuration.network)
 
     purge_parser = subparsers.add_parser('purge')
     purge_parser.add_argument('image')
@@ -43,7 +45,17 @@ def parse_args(configuration):
     args = parser.parse_args()
 
     if args.image in configuration.alias:
-        args.image = configuration.alias[args.image]
+        alias = configuration.alias[args.image]
+        if 'image' in alias:
+            args.image = alias['image']
+        else:
+            args.image = alias
+
+        if 'environment' in alias:
+            args.environment = alias['environment']
+
+        if 'network' in alias:
+            args.network = alias['network']
 
     return args
 

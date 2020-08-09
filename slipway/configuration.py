@@ -14,6 +14,7 @@ class Configuration (object):
         self.pull_daily = False
         self.mount_docker = False
         self.runtime = 'docker'
+        self.network = 'host'
 
     def load(self):
         if path.exists(self.config_path):
