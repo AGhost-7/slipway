@@ -77,7 +77,7 @@ class Image(object):
         Returns all volumes tied to the image's container configuration
         """
         config = self._image_metadata()['Config']
-        if config['Volumes'] is None:
+        if config.get('Volumes') is None:
             return []
         return list(config['Volumes'].keys())
 
