@@ -36,3 +36,11 @@ class PodmanClient(object):
             ['podman', 'image', 'inspect', name],
             capture_output=True)
         return result.returncode == 0
+
+    def is_rootless(self):
+        result = subprocess.run(
+            ['podman', 'info', '-f', '{{json .}}'],
+            capture_output=True)
+        info = json.loads(str(result.stdout, 'utf8').strip())
+
+        return info['host']['rootless']

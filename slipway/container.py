@@ -56,7 +56,9 @@ class Container(object):
         ])
         arguments.append('--network={}'.format(self.args.network))
 
-        if self.args.runtime == 'docker':
+        is_rootless = self.client.is_rootless()
+
+        if not is_rootless:
             arguments.extend([
                 '--user', 'root',
                 '-e', 'SLIPWAY_USER={}'.format(self.image.user),
@@ -65,7 +67,7 @@ class Container(object):
                 '--entrypoint', 'python3'
             ])
 
-        if self.args.runtime == 'podman':
+        if is_rootless:
             arguments.extend([
                 '--userns=keep-id'
             ])
@@ -93,7 +95,7 @@ class Container(object):
                 .format(volume.name, volume.path))
 
         arguments.append(self.image.name)
-        if self.args.runtime == 'docker':
+        if not is_rootless:
             arguments.append('/slipway-entrypoint.py')
         arguments.append('tmux')
         arguments.append('new')

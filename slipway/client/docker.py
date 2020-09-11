@@ -29,3 +29,7 @@ class DockerClient(object):
 
     def inspect_image(self, name):
         return self.client.images.get(name).attrs
+
+    def is_rootless(self):
+        # TODO
+        return False
