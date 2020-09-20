@@ -54,6 +54,9 @@ def parse_args(configuration):
         if 'environment' in alias:
             args.environment = alias['environment']
 
+        if 'volume' in alias:
+            args.volume.extend(alias['volume'])
+
         if 'network' in alias:
             args.network = alias['network']
 
