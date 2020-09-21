@@ -102,5 +102,8 @@ class Container(object):
 
         return arguments
 
+    def exists(self):
+        return self.name in self.client.list_all_containers()
+
     def run(self):
         os.execvp(self.args.runtime, self._run_arguments())

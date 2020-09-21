@@ -80,6 +80,9 @@ def main():
         container.image.initialize()
         container.volumes.initialize()
         container.binds.initialize()
+        if container.exists():
+            print('Container {} already exists'.format(container.name))
+            sys.exit(1)
         container.run()
     elif args.mode == 'purge':
         container.volumes.purge()

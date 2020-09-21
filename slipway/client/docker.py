@@ -33,3 +33,9 @@ class DockerClient(object):
     def is_rootless(self):
         # TODO
         return False
+
+    def list_all_containers(self):
+        return [
+            container.name
+            for container in self.client.containers.list(all=True)
+        ]

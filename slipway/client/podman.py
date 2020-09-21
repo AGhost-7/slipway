@@ -44,3 +44,9 @@ class PodmanClient(object):
         info = json.loads(str(result.stdout, 'utf8').strip())
 
         return info['host']['rootless']
+
+    def list_all_containers(self):
+        result = subprocess.run(
+            ['podman', 'ps', '-a', '--format', '{{.Names}}'],
+            capture_output=True)
+        return str(result.stdout, 'utf-8').strip().split('\n')
