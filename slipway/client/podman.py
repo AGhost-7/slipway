@@ -24,7 +24,8 @@ class PodmanClient(object):
             ['podman', 'image', 'inspect', '--format', '{{json .}}', name],
             capture_output=True
         )
-        return json.loads(str(result.stdout, 'utf8').strip())
+        images = json.loads(str(result.stdout, 'utf8').strip())
+        return images[0]
 
     def remove_volume(self, name):
         result = subprocess.run(
