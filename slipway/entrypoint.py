@@ -23,6 +23,10 @@ for volume in environ.get('SLIPWAY_VOLUMES').split(','):
     if len(volume) > 0:
         os.chown(volume, uid, gid)
 
+# Also need to fix the permissions for the socket mount used on the host. This
+# is created because we're bind mounting the xdg-open socket server and gpg.
+os.chown('/run/user/{}'.format(uid), uid, gid)
+
 if environ.get('SLIPWAY_DOCKER_GID'):
     system('groupadd --gid $SLIPWAY_DOCKER_GID slipway_docker')
     system('usermod -aG slipway_docker $SLIPWAY_USER')

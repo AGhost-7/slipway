@@ -14,12 +14,19 @@ VOLUME $HOME/.npm
 ```
 Since docker will create the directory with root as the owner slipway will
 correct it automatically.
-- Detects X11 support and will map it into the container
+- Detects X11 support and will map it into the container (clipboard
+integration).
+- Handles open calls (e.g., open in browser on the host) via unix sockets.
 - Maps your `~/workspace` directory into the container (can be overriden).
 - Sets the timezone to match the host
 - Sets your gitignore to match the host
 - Maps credentials files for certain package managers to the container (yarn,
 cargo, etc).
+
+## Requirements
+- Linux OS
+- Python 3.7+
+- Docker or Podman (rootless)
 
 ## Getting Started
 Install slipway:
@@ -29,7 +36,7 @@ python3 -m pip install slipway
 
 Run an example image:
 ```
-slipway start aghost7/nodejs-dev:bionic-carbon
+slipway start aghost7/nodejs-dev:focal-carbon
 ```
 
 ## Configuration

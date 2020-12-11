@@ -1,5 +1,6 @@
 alias:
-  mini: busybox
+  mini: 
+    image: busybox
 mount_docker: False
 pull: True
 pull_daily: True

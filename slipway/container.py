@@ -5,6 +5,7 @@ from .image import Image
 from .volumes import Volumes
 from .binds import Binds
 from .util import snake_case
+from .xdg_open import XdgOpen
 
 
 class Container(object):
@@ -12,6 +13,7 @@ class Container(object):
     def __init__(self, client, args):
         self.client = client
         self.args = args
+        self.xdg_open = XdgOpen(path.join(args.runtime_dir, 'slipway'))
         self.image = Image(self.client, self.args)
         self.volumes = Volumes(self.client, self.args, self.image)
         self.binds = Binds(self.client, self.args, self.image)
@@ -71,6 +73,12 @@ class Container(object):
             arguments.extend([
                 '--userns=keep-id'
             ])
+
+        arguments.extend([
+            '-v', '{}:/usr/bin/xdg-open'.format(self.xdg_open.client_path),
+            '-v', '{}/slipway:/run/slipway'.format(
+                self.args.runtime_dir),
+        ])
 
         if self.args.mount_docker:
             arguments.append('-v')

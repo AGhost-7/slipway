@@ -38,6 +38,9 @@ def parse_args(configuration):
         '--workspace', default=configuration.workspace)
     start_parser.add_argument(
         '--network', default=configuration.network)
+    start_parser.add_argument(
+        '--runtime-dir',
+        default=configuration.runtime_dir)
 
     purge_parser = subparsers.add_parser('purge')
     purge_parser.add_argument('image')
@@ -67,7 +70,7 @@ def main():
     if sys.version_info.major < 3:
         print('Python 2 is not supported')
         sys.exit(1)
-    configuration = Configuration(environ['HOME'])
+    configuration = Configuration(environ)
     configuration.load()
     args = parse_args(configuration)
     client = None
@@ -80,6 +83,7 @@ def main():
         container.image.initialize()
         container.volumes.initialize()
         container.binds.initialize()
+        container.xdg_open.start_server()
         if container.exists():
             print('Container {} already exists'.format(container.name))
             sys.exit(1)

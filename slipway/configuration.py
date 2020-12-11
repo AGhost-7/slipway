@@ -1,9 +1,11 @@
 import yaml
-from os import path, environ
+import os
+from os import path
 
 
 class Configuration (object):
-    def __init__(self, home_path):
+    def __init__(self, environ):
+        home_path = environ['HOME']
         # per xdg spec:
         # https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
         config_home = environ.get(
@@ -12,6 +14,9 @@ class Configuration (object):
             'XDG_DATA_HOME', path.join(home_path, '.local/share'))
         self.config_path = path.join(config_home, 'slipway.yaml')
         self.data_directory = path.join(data_home, 'slipway')
+        self.runtime_dir = environ.get(
+            'XDG_RUNTIME_DIR',
+            path.join('/run/user', str(os.getuid())))
         self.workspace = path.join(home_path, 'workspace')
         self.alias = {}
         self.environment = []

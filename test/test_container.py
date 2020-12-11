@@ -9,19 +9,22 @@ from slipway.client import DockerClient
 
 
 class FakeArgs(object):
-    def __init__(self, workspace):
+    def __init__(self, workspace, runtime_dir):
         self.image = 'image-fixture'
         self.volume = []
         self.environment = []
         self.workspace = workspace
         self.mount_docker = False
         self.runtime = 'docker'
+        self.runtime_dir = runtime_dir
+        self.network = 'host'
 
 
 def create_container(tmp_path):
     build_image()
     workspace = tmp_path / 'workspace'
-    args = FakeArgs(str(workspace))
+    runtime_dir = tmp_path / 'runtime'
+    args = FakeArgs(str(workspace), str(runtime_dir))
     docker_client = docker.from_env()
     client = DockerClient()
     try:
@@ -30,8 +33,9 @@ def create_container(tmp_path):
     except docker.errors.NotFound:
         pass
     master_fd, slave_fd = pty.openpty()
+    args = Container(client, args)._run_arguments()
     process = Popen(
-        Container(client, args)._run_arguments(),
+        args,
         preexec_fn=os.setsid,
         stdout=slave_fd,
         stderr=slave_fd,
