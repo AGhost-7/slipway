@@ -3,6 +3,7 @@ from subprocess import run, PIPE
 import json
 import sys
 import os
+import stat
 
 socket_file = sys.argv[1]
 
@@ -34,4 +35,5 @@ class XdgOpenHandler(StreamRequestHandler):
 
 
 with UnixStreamServer(socket_file, XdgOpenHandler) as server:
+    os.chmod(socket_file, stat.S_IRUSR | stat.S_IWUSR)
     server.serve_forever()

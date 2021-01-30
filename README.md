@@ -19,7 +19,7 @@ integration).
 - Handles open calls (e.g., open in browser on the host) via unix sockets.
 - Maps your `~/workspace` directory into the container (can be overriden).
 - Sets the timezone to match the host
-- Sets your gitignore to match the host
+- Sets your git config to match the host
 - Maps credentials files for certain package managers to the container (yarn,
 cargo, etc).
 
@@ -45,7 +45,7 @@ under `~/.config/slipway.yaml`.
 ```yml
 pull: true
 pull_daily: true
-runtime: podmand
+runtime: podman
 alias:
   devops:
     image: aghost7/devops:focal
