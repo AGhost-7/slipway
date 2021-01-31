@@ -1,5 +1,6 @@
 import subprocess
 import json
+from typing import Optional
 
 
 class PodmanClient(object):
@@ -51,3 +52,17 @@ class PodmanClient(object):
             ['podman', 'ps', '-a', '--format', '{{.Names}}'],
             capture_output=True)
         return str(result.stdout, 'utf-8').strip().split('\n')
+
+    def image_file(self, name: str, file_path: str) -> Optional[str]:
+        result = subprocess.run(
+            [
+                'podman',
+                'run',
+                '--rm',
+                '--entrypoint',
+                '/bin/cat',
+                name,
+                file_path],
+            capture_output=True)
+
+        return str(result.stdout, 'utf-8')

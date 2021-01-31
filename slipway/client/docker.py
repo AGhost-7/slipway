@@ -1,7 +1,10 @@
 
-from docker.errors import ImageNotFound
-import docker
+import tarfile
+from io import BytesIO
+from docker.errors import ImageNotFound  # type: ignore
+import docker  # type: ignore
 import subprocess
+from typing import Optional
 
 
 class DockerClient(object):
@@ -39,3 +42,17 @@ class DockerClient(object):
             container.name
             for container in self.client.containers.list(all=True)
         ]
+
+    def image_file(self, name: str, file_path: str) -> Optional[str]:
+        container = self.client.containers.create(name)
+        try:
+            chunks, stat = container.get_archive(file_path)
+            aggregate = bytearray()
+            for chunk in chunks:
+                aggregate.append(chunk)
+            tar = tarfile.open(fileobj=BytesIO(aggregate))
+            file_content = tar.extractfile('/etc/passwd')
+
+            return file_content if file_content is None else str(file_content.read())
+        finally:
+            container.remove()

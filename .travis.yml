@@ -9,4 +9,7 @@ before_install:
   - echo 'export PATH="$PATH:$HOME/.poetry/bin"' >> ~/.bashrc
   - . ~/.bashrc
 install: poetry install
-script: poetry run pytest
+script:
+  - poetry run mypy slipway
+  - poetry run flake8 .
+  - poetry run pytest
