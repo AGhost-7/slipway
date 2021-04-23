@@ -2,8 +2,9 @@
 from slipway.binds import Binds
 from slipway.image import Image
 from slipway.client import DockerClient
+from .util import create_client
 
-client = DockerClient()
+client = create_client()
 
 
 class FakeArgs(object):
@@ -11,10 +12,10 @@ class FakeArgs(object):
         self.image = 'image-fixture'
         self.volume = volume
         self.workspace = workspace
-        self.runtime = 'docker'
+        self.runtime = client.runtime
 
 
-def test_initialize(tmp_path):
+def test_initialize(tmp_path, image_fixture):
     volume = tmp_path / 'initialize'
     assert not volume.exists()
     args = FakeArgs(
@@ -26,7 +27,7 @@ def test_initialize(tmp_path):
     assert volume.exists()
 
 
-def test_list(tmp_path):
+def test_list(tmp_path, image_fixture):
     file_bind = tmp_path / 'file.txt'
     file_bind.touch()
     dir_bind = tmp_path / 'directory'

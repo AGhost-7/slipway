@@ -58,21 +58,14 @@ class Container(object):
         ])
         arguments.append('--network={}'.format(self.args.network))
 
-        is_rootless = self.client.is_rootless()
-
-        if not is_rootless:
-            arguments.extend([
-                '--user', 'root',
-                '-e', 'SLIPWAY_USER={}'.format(self.image.user),
-                '-e', 'SLIPWAY_VOLUMES={}'.format(self._volumes_env()),
-                '-v', self._entrypoint_script() + ':/slipway-entrypoint.py:ro',
-                '--entrypoint', 'python3'
-            ])
-
-        if is_rootless:
-            arguments.extend([
-                '--userns=keep-id'
-            ])
+        if self.client.has_uidmap():
+            for (option, host_id, container_id) in [
+                    ('uidmap', os.getuid(), self.image.user_id),
+                    ('gidmap', os.getgid(), self.image.group_id)]:
+                arguments.extend([
+                    f"--{option}={container_id}:0:1",
+                    f"--{option}=0:1:{container_id - 1}",
+                ])
 
         arguments.extend([
             '-v', '{}:/usr/bin/xdg-open'.format(self.xdg_open.client_path),
@@ -103,11 +96,10 @@ class Container(object):
                 .format(volume.name, volume.path))
 
         arguments.append(self.image.name)
-        if not is_rootless:
-            arguments.append('/slipway-entrypoint.py')
-        arguments.append('tmux')
-        arguments.append('new')
+        #arguments.append('tmux')
+        #arguments.append('new')
 
+        print('arguments', arguments)
         return arguments
 
     def exists(self):

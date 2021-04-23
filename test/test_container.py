@@ -1,37 +1,36 @@
+import pytest
 from slipway.container import Container
-from test.util import build_image
 import docker
 import docker.errors
 from subprocess import Popen, TimeoutExpired
 import pty
 import os
-from slipway.client import DockerClient
+from .util import create_client
+
+client = create_client()
 
 
 class FakeArgs(object):
-    def __init__(self, workspace, runtime_dir):
+    def __init__(self, workspace, runtime_dir, cache_directory):
         self.image = 'image-fixture'
         self.volume = []
         self.environment = []
         self.workspace = workspace
         self.mount_docker = False
-        self.runtime = 'docker'
+        self.runtime = client.runtime
         self.runtime_dir = runtime_dir
+        self.cache_directory = cache_directory
         self.network = 'host'
 
 
 def create_container(tmp_path):
-    build_image()
     workspace = tmp_path / 'workspace'
     runtime_dir = tmp_path / 'runtime'
-    args = FakeArgs(str(workspace), str(runtime_dir))
+    cache_directory = tmp_path / 'cache_directory'
+    args = FakeArgs(str(workspace), str(runtime_dir), str(cache_directory))
     docker_client = docker.from_env()
-    client = DockerClient()
-    try:
-        container = docker_client.containers.get('slipway_image_fixture')
-        container.kill()
-    except docker.errors.NotFound:
-        pass
+    client = create_client()
+    client.force_kill_container("slipway_image_fixture")
     master_fd, slave_fd = pty.openpty()
     args = Container(client, args)._run_arguments()
     process = Popen(
@@ -49,7 +48,7 @@ def create_container(tmp_path):
     return docker_client.containers.get('slipway_image_fixture')
 
 
-def test_run(tmp_path):
+def test_run(tmp_path, image_fixture):
     container = create_container(tmp_path)
     code, output = container.exec_run('ps aux')
     assert code == 0
@@ -57,9 +56,14 @@ def test_run(tmp_path):
     container.kill()
 
 
-def test_entrypoint(tmp_path):
+def test_entrypoint(tmp_path, image_fixture):
     container = create_container(tmp_path)
     code, output = container.exec_run('stat -c %U /test-volume')
     assert code == 0
     assert 'foobar' in str(output)
     container.kill()
+
+
+@pytest.mark.skip
+def test_uidmap():
+    pass

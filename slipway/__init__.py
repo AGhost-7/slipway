@@ -12,6 +12,9 @@ def parse_args(configuration):
     parser.add_argument(
         '--data-directory',
         default=configuration.data_directory)
+    parser.add_argument(
+        '--cache-directory',
+        default=configuration.cache_directory)
     subparsers = parser.add_subparsers(dest='mode')
     subparsers.required = True
 

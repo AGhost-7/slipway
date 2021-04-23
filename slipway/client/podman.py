@@ -4,9 +4,13 @@ from typing import Optional
 
 
 class PodmanClient(object):
+    @property
+    def runtime(self):
+        return "podman"
+
     def list_volume_names(self):
         result = subprocess.run(
-            ['podman', 'volumes', 'ls', '--format', '{{.Name}}'],
+            ['podman', 'volume', 'ls', '--format', '{{.Name}}'],
             capture_output=True
         )
         return str(result.stdout, 'utf8').strip().split('\n')
@@ -30,7 +34,7 @@ class PodmanClient(object):
 
     def remove_volume(self, name):
         result = subprocess.run(
-            ['podman', 'volumes', 'remove', name])
+            ['podman', 'volume', 'remove', name])
         assert(result.returncode == 0)
 
     def image_exists(self, name):
@@ -39,13 +43,8 @@ class PodmanClient(object):
             capture_output=True)
         return result.returncode == 0
 
-    def is_rootless(self):
-        result = subprocess.run(
-            ['podman', 'info', '-f', '{{json .}}'],
-            capture_output=True)
-        info = json.loads(str(result.stdout, 'utf8').strip())
-
-        return info['host']['rootless']
+    def has_uidmap(self):
+        return True
 
     def list_all_containers(self):
         result = subprocess.run(

@@ -12,6 +12,9 @@ class Configuration (object):
             'XDG_CONFIG_HOME', path.join(home_path, '.config'))
         data_home = environ.get(
             'XDG_DATA_HOME', path.join(home_path, '.local/share'))
+        cache_home = environ.get(
+            'XDG_CACHE_HOME', path.join(home_path, '.cache'))
+        self.cache_directory = path.join(cache_home, 'slipway')
         self.config_path = path.join(config_home, 'slipway.yaml')
         self.data_directory = path.join(data_home, 'slipway')
         self.runtime_dir = environ.get(

@@ -1,8 +1,9 @@
 
 import tarfile
+from os import path
 from io import BytesIO
-from docker.errors import ImageNotFound  # type: ignore
-import docker  # type: ignore
+from docker.errors import ImageNotFound
+import docker
 import subprocess
 from typing import Optional
 
@@ -10,6 +11,7 @@ from typing import Optional
 class DockerClient(object):
     def __init__(self):
         self.client = docker.from_env()
+        self.runtime = "docker"
 
     def list_volume_names(self):
         return map(lambda volume: volume.name, self.client.volumes.list())
@@ -33,15 +35,14 @@ class DockerClient(object):
     def inspect_image(self, name):
         return self.client.images.get(name).attrs
 
-    def is_rootless(self):
-        # TODO
-        return False
-
     def list_all_containers(self):
         return [
             container.name
             for container in self.client.containers.list(all=True)
         ]
+
+    def has_uidmap(self):
+        return False
 
     def image_file(self, name: str, file_path: str) -> Optional[str]:
         container = self.client.containers.create(name)
@@ -49,10 +50,12 @@ class DockerClient(object):
             chunks, stat = container.get_archive(file_path)
             aggregate = bytearray()
             for chunk in chunks:
-                aggregate.append(chunk)
+                aggregate += chunk
             tar = tarfile.open(fileobj=BytesIO(aggregate))
-            file_content = tar.extractfile('/etc/passwd')
+            file_content = tar.extractfile(path.basename(file_path))
 
-            return file_content if file_content is None else str(file_content.read())
+            return (
+                file_content if file_content is None
+                else str(file_content.read(), 'utf-8'))
         finally:
             container.remove()

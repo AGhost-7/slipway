@@ -10,12 +10,13 @@ slipway = 'slipway:main'
 
 [tool.poetry.dependencies]
 python = "^3.6"
-docker = ">=4.0.0"
+docker = "^4.0.0"
 PyYAML = "^5.3"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.3.5"
+pytest = "^6.0.0"
 mypy = "^0.800"
+bpython = "^0.21"
 
 [build-system]
 requires = ["poetry>=0.12"]

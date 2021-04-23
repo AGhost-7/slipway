@@ -4,12 +4,38 @@ from datetime import datetime
 from .util import snake_case
 
 
+class PasswdEntry(object):
+    def __init__(self, uid: int, gid: int):
+        self.uid = uid
+        self.gid = gid
+
+
 class Image(object):
     def __init__(self, client, args):
         self.client = client
         self.args = args
         self.name = args.image
         self._metadata = None
+        self._passwd = None
+
+    def _image_passwd(self):
+        if self._passwd is None:
+            self._passwd = {}
+            cache_path = path.join(
+                self.args.cache_directory, 'passwd', self.id)
+            if path.exists(cache_path):
+                with open(cache_path) as file:
+                    text = file.read()
+            else:
+                text = self.client.image_file(self.name, '/etc/passwd')
+                makedirs(path.dirname(cache_path), exist_ok=True)
+                with open(cache_path, 'w+') as file:
+                    file.write(text)
+            for line in text.splitlines():
+                parts = line.split(':')
+                self._passwd[parts[0]] = PasswdEntry(
+                    int(parts[2]), int(parts[3]))
+        return self._passwd
 
     def _image_metadata(self):
         if self._metadata is None:
@@ -82,12 +108,27 @@ class Image(object):
         return list(config['Volumes'].keys())
 
     @property
+    def id(self):
+        return self._image_metadata()['Id'].replace('sha256:', '')
+
+    @property
     def entrypoint(self):
         return self._image_metadata()['Config']['Entrypoint']
 
     @property
-    def user(self):
-        return self._image_metadata()['Config']['User']
+    def user(self) -> str:
+        user = self._image_metadata()['Config'].get('User', 'root')
+        return 'root' if user == '' else user
+
+    @property
+    def user_id(self) -> int:
+        if self.user.isdigit():
+            return int(self.user)
+        return self._image_passwd()[self.user].uid
+
+    @property
+    def group_id(self) -> int:
+        return self._image_passwd()[self.user].gid
 
     @property
     def home(self):

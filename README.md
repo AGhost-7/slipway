@@ -26,7 +26,7 @@ cargo, etc).
 ## Requirements
 - Linux OS
 - Python 3.7+
-- Docker or Podman (rootless)
+- Docker or Podman (rootless only)
 
 ## Getting Started
 Install slipway:

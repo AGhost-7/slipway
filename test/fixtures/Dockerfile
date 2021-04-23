@@ -1,6 +1,6 @@
 FROM python:3
 
-RUN useradd foobar && \
+RUN useradd --uid 1001 foobar && \
 	apt-get update && \
 	apt-get install -y tmux sudo
 
