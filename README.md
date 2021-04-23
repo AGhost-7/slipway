@@ -22,6 +22,7 @@ integration).
 - Sets your git config to match the host
 - Maps credentials files for certain package managers to the container (yarn,
 cargo, etc).
+- sets up correct uid mappings on podman.
 
 ## Requirements
 - Linux OS
