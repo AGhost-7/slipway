@@ -96,10 +96,6 @@ class Container(object):
                 .format(volume.name, volume.path))
 
         arguments.append(self.image.name)
-        #arguments.append('tmux')
-        #arguments.append('new')
-
-        print('arguments', arguments)
         return arguments
 
     def exists(self):

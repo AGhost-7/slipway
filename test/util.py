@@ -1,3 +1,4 @@
+from typing import List
 import subprocess
 import docker
 from docker.errors import ImageNotFound, NotFound
@@ -24,6 +25,12 @@ class TestDockerClient(DockerClient):
         except NotFound:
             pass
 
+    def exec_container(self, container, command) -> str:
+        container = self.client.containers.get(container)
+        code, output = container.exec_run(command)
+        assert code == 0
+        return output
+
 
 class TestPodmanClient(PodmanClient):
 
@@ -33,7 +40,18 @@ class TestPodmanClient(PodmanClient):
         ])
 
     def force_kill_container(self, container):
-        pass
+        try:
+            subprocess.check_output([
+                "podman", "kill", container
+            ])
+        except:
+            pass
+
+    def exec_container(self, container: str, command: List[str]) -> str:
+        output = subprocess.check_output([
+            "podman", "exec", container 
+            ] + command)
+        return str(output, "utf-8")
 
 
 def create_client():
