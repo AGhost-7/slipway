@@ -42,8 +42,7 @@ class Binds(object):
         uid = pwd.getpwnam(environ['USER']).pw_uid
         gnupg_socket_path = path.join('/run/user', str(uid), 'gnupg')
         if path.exists(gnupg_socket_path):
-            # FIXME: how to get uid of user in container?
-            yield Bind(gnupg_socket_path, '/run/user/1000/gnupg', 'd')
+            yield Bind(gnupg_socket_path, f"/run/user/{self.image.user_id}/gnupg", 'd')
 
         gnupg_path = path.join(environ['HOME'], '.gnupg')
         if path.exists(gnupg_path):
