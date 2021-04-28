@@ -66,6 +66,7 @@ def parse_args(configuration):
         if 'network' in alias:
             args.network = alias['network']
 
+    assert args.runtime == "podman", "Only podman is currently supported"
     return args
 
 

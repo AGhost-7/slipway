@@ -27,7 +27,7 @@ cargo, etc).
 ## Requirements
 - Linux OS
 - Python 3.7+
-- Docker or Podman (rootless only)
+- Podman (rootless only)
 
 ## Getting Started
 Install slipway:
@@ -110,7 +110,7 @@ podman system migrate
 
 And then you can run your containers with podman instead!
 ```bash
-slipway start --runtime podman aghost7/nvim:bionic
+slipway start --runtime podman aghost7/nvim:focal
 ```
 
 [subuid]: https://www.man7.org/linux/man-pages/man5/subuid.5.html

@@ -27,7 +27,7 @@ class Configuration (object):
         self.pull = False
         self.pull_daily = False
         self.mount_docker = False
-        self.runtime = 'docker'
+        self.runtime = 'podman'
         self.network = 'host'
 
     def load(self):

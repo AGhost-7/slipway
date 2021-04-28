@@ -3,9 +3,9 @@ void setBuildStatus(String message, String state) {
 	// workaround for: https://issues.jenkins-ci.org/browse/JENKINS-54249
 	withCredentials([string(credentialsId: 'github-status-access-token', variable: 'TOKEN')]) {
 		sh """
-			target_url=\"https://jenkins.jonathan-boudreau.com/blue/organizations/jenkins/docker-dev/detail/docker-dev/$BUILD_NUMBER/pipeline\"
+			target_url=\"https://jenkins.jonathan-boudreau.com/blue/organizations/jenkins/slipway/detail/slipway/$BUILD_NUMBER/pipeline\"
 			curl \
-			\"https://api.github.com/repos/AGhost-7/docker-dev/statuses/$GIT_COMMIT\" \
+			\"https://api.github.com/repos/AGhost-7/slipway/statuses/$GIT_COMMIT\" \
 			-H \"Authorization: token $TOKEN\" \
 			-H \"Content-Type: application/json\" \
 			-H \"Accept: application/vnd.github.v3+json\" \
@@ -32,7 +32,7 @@ pipeline {
         stage("install poetry") {
             steps {
                 sh "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -"
-                sh 'echo \'export PATH="$PATH:$HOME/.local/bin"\' >> ~/.bashrc'
+                sh 'echo \'export PATH="$PATH:$HOME/.local/bin"\' >> ~/.profile'
                 sh "poetry --version"
             }
         }
