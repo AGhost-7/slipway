@@ -8,19 +8,22 @@ client = create_client()
 
 
 class FakeArgs(object):
-    def __init__(self, volume, workspace):
+    def __init__(self, volume, workspace, cache_directory):
         self.image = 'image-fixture'
         self.volume = volume
         self.workspace = workspace
         self.runtime = client.runtime
+        self.cache_directory = cache_directory
 
 
 def test_initialize(tmp_path, image_fixture):
     volume = tmp_path / 'initialize'
+    cache_directory = tmp_path / 'cache'
     assert not volume.exists()
     args = FakeArgs(
         [str(volume) + ':/initialize'],
-        str(tmp_path / 'workspace'))
+        str(tmp_path / 'workspace'),
+        str(cache_directory))
     image = Image(client, args)
     binds = Binds(client, args, image)
     binds.initialize()
@@ -34,9 +37,11 @@ def test_list(tmp_path, image_fixture):
     dir_bind.mkdir()
     host_workspace = tmp_path / 'some-workspace'
     host_workspace.mkdir()
+    cache_directory = tmp_path / 'cache'
     args = FakeArgs(
         [str(file_bind) + ':/file', str(dir_bind) + ':/dir'],
-        str(host_workspace))
+        str(host_workspace),
+        str(cache_directory))
     image = Image(client, args)
     binds = Binds(client, args, image)
     matches = [
