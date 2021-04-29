@@ -24,11 +24,11 @@ pipeline {
     }
 
     stages {
-        //stage("set status") {
-        //    steps {
-        //        setBuildStatus("Build started", "pending")
-        //    }
-        //}
+        stage("set status") {
+            steps {
+                setBuildStatus("Build started", "pending")
+            }
+        }
         stage("install poetry") {
             steps {
                 sh """
@@ -55,16 +55,35 @@ pipeline {
                 sh "poetry run black --check ."
             }
         }
+        stage("install podman") {
+            steps {
+                sh """
+                    set -e
+                    . /etc/os-release
+                    echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_\${VERSION_ID}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+                    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_\${VERSION_ID}/Release.key | apt-key add -
+                    apt-get update
+                    apt-get install -y podman
+                    podman info
+                """
+            }
+        }
+
+        stage("run podman tests") {
+            steps {
+                sh "poetry run pytest"
+            }
+        }
     }
 
-    //post {
-    //    success {
-    //        setBuildStatus("Build succeeded", "success")
-    //    }
-    //    failure {
-    //        setBuildStatus("Build failed", "failure")
-    //    }
-    //}
+    post {
+        success {
+            setBuildStatus("Build succeeded", "success")
+        }
+        failure {
+            setBuildStatus("Build failed", "failure")
+        }
+    }
 }
 
 
