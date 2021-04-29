@@ -24,16 +24,20 @@ pipeline {
     }
 
     stages {
-        stage("set status") {
-            steps {
-                setBuildStatus("Build started", "pending")
-            }
-        }
+        //stage("set status") {
+        //    steps {
+        //        setBuildStatus("Build started", "pending")
+        //    }
+        //}
         stage("install poetry") {
             steps {
-                sh "curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -"
-                sh 'echo \'export PATH="$PATH:$HOME/.local/bin"\' >> ~/.profile'
-                sh "poetry --version"
+                sh """
+                    set -e
+                    export POETRY_HOME=/opt/poetry
+                    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
+                    ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
+                    poetry --version
+                """
             }
         }
         stage("install dependencies") {
@@ -46,16 +50,21 @@ pipeline {
                 sh "poetry run mypy ."
             }
         }
+        stage("run black") {
+            steps {
+                sh "poetry run black --check ."
+            }
+        }
     }
 
-    post {
-        success {
-            setBuildStatus("Build succeeded", "success")
-        }
-        failure {
-            setBuildStatus("Build failed", "failure")
-        }
-    }
+    //post {
+    //    success {
+    //        setBuildStatus("Build succeeded", "success")
+    //    }
+    //    failure {
+    //        setBuildStatus("Build failed", "failure")
+    //    }
+    //}
 }
 
 

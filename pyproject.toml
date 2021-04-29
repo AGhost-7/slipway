@@ -17,7 +17,6 @@ PyYAML = "^5.3"
 pytest = "^6.0.0"
 mypy = "^0.800"
 bpython = "^0.21"
-flake8 = "^3.9.1"
 black = "^21.4b2"
 
 [build-system]
