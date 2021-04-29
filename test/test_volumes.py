@@ -31,6 +31,6 @@ def test_volumes_purge(image_fixture):
     args = FakeArgs(image_fixture)
     image = Image(client, args)
     volumes = Volumes(client, args, image)
-    client.create_volume('slipway_image_fixture_test_volume')
+    client.create_volume("slipway_image_fixture_test_volume")
     volumes.purge()
     assert "slipway_image_fixture_test_volume" not in client.list_volume_names()

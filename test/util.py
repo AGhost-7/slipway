@@ -20,7 +20,7 @@ class TestDockerClient(DockerClient):
 
     def force_kill_container(self):
         try:
-            container = self.client.containers.get('slipway_image_fixture')
+            container = self.client.containers.get("slipway_image_fixture")
             container.kill()
         except NotFound:
             pass
@@ -33,24 +33,17 @@ class TestDockerClient(DockerClient):
 
 
 class TestPodmanClient(PodmanClient):
-
     def remove_image(self, tag):
-        subprocess.check_output([
-            "podman", "rmi", tag
-        ])
+        subprocess.check_output(["podman", "rmi", tag])
 
     def force_kill_container(self, container):
         try:
-            subprocess.check_output([
-                "podman", "kill", container
-            ])
+            subprocess.check_output(["podman", "kill", container])
         except:
             pass
 
     def exec_container(self, container: str, command: List[str]) -> str:
-        output = subprocess.check_output([
-            "podman", "exec", container 
-            ] + command)
+        output = subprocess.check_output(["podman", "exec", container] + command)
         return str(output, "utf-8")
 
 

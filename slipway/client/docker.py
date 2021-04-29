@@ -1,4 +1,3 @@
-
 import tarfile
 from os import path
 from io import BytesIO
@@ -23,7 +22,7 @@ class DockerClient(object):
         self.client.volumes.get(name).remove()
 
     def pull_image(self, name):
-        subprocess.run(['docker', 'pull', name])
+        subprocess.run(["docker", "pull", name])
 
     def image_exists(self, name):
         try:
@@ -36,10 +35,7 @@ class DockerClient(object):
         return self.client.images.get(name).attrs
 
     def list_all_containers(self):
-        return [
-            container.name
-            for container in self.client.containers.list(all=True)
-        ]
+        return [container.name for container in self.client.containers.list(all=True)]
 
     def has_uidmap(self):
         return False
@@ -55,7 +51,9 @@ class DockerClient(object):
             file_content = tar.extractfile(path.basename(file_path))
 
             return (
-                file_content if file_content is None
-                else str(file_content.read(), 'utf-8'))
+                file_content
+                if file_content is None
+                else str(file_content.read(), "utf-8")
+            )
         finally:
             container.remove()

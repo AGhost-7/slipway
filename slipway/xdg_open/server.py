@@ -13,25 +13,26 @@ class XdgOpenHandler(StreamRequestHandler):
         url = self.rfile.readline().strip()
         try:
             result = run(
-                ['xdg-open', url],
-                shell=False,
-                check=False,
-                stdout=PIPE,
-                stderr=PIPE)
-            response = json.dumps({
-                'returncode': result.returncode,
-                'stdout': str(result.stdout, 'utf8'),
-                'stderr': str(result.stderr, 'utf8')
-            })
+                ["xdg-open", url], shell=False, check=False, stdout=PIPE, stderr=PIPE
+            )
+            response = json.dumps(
+                {
+                    "returncode": result.returncode,
+                    "stdout": str(result.stdout, "utf8"),
+                    "stderr": str(result.stderr, "utf8"),
+                }
+            )
 
-            self.request.sendall(bytes(response + '\n', 'utf8'))
+            self.request.sendall(bytes(response + "\n", "utf8"))
         except PermissionError:
-            response = json.dumps({
-                'returncode': 127,
-                'stdout': '',
-                'stderr': 'xdg-open not found on host machine'
-            })
-            self.request.sendall(bytes(response + '\n', 'utf8'))
+            response = json.dumps(
+                {
+                    "returncode": 127,
+                    "stdout": "",
+                    "stderr": "xdg-open not found on host machine",
+                }
+            )
+            self.request.sendall(bytes(response + "\n", "utf8"))
 
 
 with UnixStreamServer(socket_file, XdgOpenHandler) as server:

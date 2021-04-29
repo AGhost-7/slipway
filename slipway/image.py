@@ -1,4 +1,3 @@
-
 from os import path, makedirs
 from datetime import datetime
 from .util import snake_case
@@ -21,20 +20,18 @@ class Image(object):
     def _image_passwd(self):
         if self._passwd is None:
             self._passwd = {}
-            cache_path = path.join(
-                self.args.cache_directory, 'passwd', self.id)
+            cache_path = path.join(self.args.cache_directory, "passwd", self.id)
             if path.exists(cache_path):
                 with open(cache_path) as file:
                     text = file.read()
             else:
-                text = self.client.image_file(self.name, '/etc/passwd')
+                text = self.client.image_file(self.name, "/etc/passwd")
                 makedirs(path.dirname(cache_path), exist_ok=True)
-                with open(cache_path, 'w+') as file:
+                with open(cache_path, "w+") as file:
                     file.write(text)
             for line in text.splitlines():
-                parts = line.split(':')
-                self._passwd[parts[0]] = PasswdEntry(
-                    int(parts[2]), int(parts[3]))
+                parts = line.split(":")
+                self._passwd[parts[0]] = PasswdEntry(int(parts[2]), int(parts[3]))
         return self._passwd
 
     def _image_metadata(self):
@@ -57,17 +54,18 @@ class Image(object):
         Returns true is the last successful pull was performed today.
         """
         last_stale_path = path.join(
-            self.args.data_directory,
-            'last_stale_check',
-            snake_case(self.name))
+            self.args.data_directory, "last_stale_check", snake_case(self.name)
+        )
         if path.exists(last_stale_path):
             with open(last_stale_path) as file_descriptor:
                 content = file_descriptor.read()
-                last_pull = datetime.strptime(content, '%Y-%m-%d')
+                last_pull = datetime.strptime(content, "%Y-%m-%d")
                 now = datetime.now()
-                return now.day == last_pull.day \
-                    and now.month == last_pull.month \
+                return (
+                    now.day == last_pull.day
+                    and now.month == last_pull.month
                     and now.year == last_pull.year
+                )
 
         return False
 
@@ -75,12 +73,11 @@ class Image(object):
         """
         Creates the last_pull file which after a successful pull was performed.
         """
-        stale_check_dir = path.join(
-            self.args.data_directory, 'last_stale_check')
+        stale_check_dir = path.join(self.args.data_directory, "last_stale_check")
         makedirs(stale_check_dir, exist_ok=True)
-        content = datetime.now().strftime('%Y-%m-%d')
+        content = datetime.now().strftime("%Y-%m-%d")
         last_stale_path = path.join(stale_check_dir, snake_case(self.name))
-        with open(last_stale_path, 'w+') as file_descriptor:
+        with open(last_stale_path, "w+") as file_descriptor:
             file_descriptor.write(content)
 
     def initialize(self):
@@ -88,12 +85,11 @@ class Image(object):
         Pulls the image if not present
         """
         if not self.exists():
-            message = 'Image {} not found, attempting to pull down'
+            message = "Image {} not found, attempting to pull down"
             print(message.format(self.name))
             self.pull()
             self._create_stale_check_file()
-        elif self.args.pull and not (
-                self.args.pull_daily and self._pulled_today()):
+        elif self.args.pull and not (self.args.pull_daily and self._pulled_today()):
             self.pull()
             self._create_stale_check_file()
 
@@ -102,23 +98,23 @@ class Image(object):
         """
         Returns all volumes tied to the image's container configuration
         """
-        config = self._image_metadata()['Config']
-        if config.get('Volumes') is None:
+        config = self._image_metadata()["Config"]
+        if config.get("Volumes") is None:
             return []
-        return list(config['Volumes'].keys())
+        return list(config["Volumes"].keys())
 
     @property
     def id(self):
-        return self._image_metadata()['Id'].replace('sha256:', '')
+        return self._image_metadata()["Id"].replace("sha256:", "")
 
     @property
     def entrypoint(self):
-        return self._image_metadata()['Config']['Entrypoint']
+        return self._image_metadata()["Config"]["Entrypoint"]
 
     @property
     def user(self) -> str:
-        user = self._image_metadata()['Config'].get('User', 'root')
-        return 'root' if user == '' else user
+        user = self._image_metadata()["Config"].get("User", "root")
+        return "root" if user == "" else user
 
     @property
     def user_id(self) -> int:
@@ -132,4 +128,4 @@ class Image(object):
 
     @property
     def home(self):
-        return path.join('/home', self.user)
+        return path.join("/home", self.user)

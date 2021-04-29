@@ -7,8 +7,8 @@ class XdgOpen(object):
     def __init__(self, slipway_dir):
         self._script_dir = path.dirname(path.realpath(__file__))
         self._slipway_dir = slipway_dir
-        self._socket_file = path.join(slipway_dir, 'xdg-open.sock')
-        self._pid_file = path.join(slipway_dir, 'xdg-open.pid')
+        self._socket_file = path.join(slipway_dir, "xdg-open.sock")
+        self._pid_file = path.join(slipway_dir, "xdg-open.pid")
 
     @property
     def runtime_dir(self):
@@ -16,7 +16,7 @@ class XdgOpen(object):
 
     @property
     def client_path(self):
-        return path.join(self._script_dir, 'client.py')
+        return path.join(self._script_dir, "client.py")
 
     def _kill(self, code):
         with open(self._pid_file) as file:
@@ -41,14 +41,15 @@ class XdgOpen(object):
 
     def _start_background_process(self, child_process_args):
         script_dir = path.dirname(path.realpath(__file__))
-        server_script = path.join(script_dir, 'server.py')
+        server_script = path.join(script_dir, "server.py")
         process = Popen(
-            ['python3', server_script, self._socket_file],
+            ["python3", server_script, self._socket_file],
             stdin=DEVNULL,
             stdout=DEVNULL,
             stderr=DEVNULL,
-            **child_process_args)
-        with open(self._pid_file, 'w+') as file:
+            **child_process_args
+        )
+        with open(self._pid_file, "w+") as file:
             file.write(str(process.pid))
 
     def start_server(self, **kwargs):
