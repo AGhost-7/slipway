@@ -1,6 +1,7 @@
 from pathlib import Path
 import pytest
 import subprocess
+import docker
 
 from .util import test_runtime
 

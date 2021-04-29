@@ -18,9 +18,9 @@ class TestDockerClient(DockerClient):
         except ImageNotFound:
             pass
 
-    def force_kill_container(self):
+    def force_kill_container(self, container: str):
         try:
-            container = self.client.containers.get("slipway_image_fixture")
+            container = self.client.containers.get(container)
             container.kill()
         except NotFound:
             pass
@@ -29,7 +29,7 @@ class TestDockerClient(DockerClient):
         container = self.client.containers.get(container)
         code, output = container.exec_run(command)
         assert code == 0
-        return output
+        return str(output, "utf-8")
 
 
 class TestPodmanClient(PodmanClient):

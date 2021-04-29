@@ -3,7 +3,7 @@ from slipway.container import Container
 from subprocess import Popen, TimeoutExpired
 import pty
 import os
-from .util import create_client
+from .util import create_client, test_runtime
 
 client = create_client()
 
@@ -57,6 +57,10 @@ def test_run(container_fixture):
     assert "bash" in output
 
 
+@pytest.mark.skipif(
+    test_runtime() == "docker",
+    reason="uidmap doesnt work on rootless docker"
+)
 def test_permission(container_fixture):
     output = client.exec_container(
         container_fixture, ["stat", "-c", "%U", "/test-volume"]
