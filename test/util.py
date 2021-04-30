@@ -20,8 +20,7 @@ class TestDockerClient(DockerClient):
 
     def force_kill_container(self, container: str):
         try:
-            container = self.client.containers.get(container)
-            container.kill()
+            self.client.containers.get(container).kill()
         except NotFound:
             pass
 
