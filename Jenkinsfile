@@ -17,10 +17,7 @@ void setBuildStatus(String message, String state) {
 
 pipeline {
     agent {
-        kubernetes {
-            defaultContainer "python"
-            yamlFile "JenkinsPod.yml"
-        }
+        label 'ubuntu-vm'
     }
 
     stages {
@@ -29,12 +26,20 @@ pipeline {
                 setBuildStatus("Build started", "pending")
             }
         }
+        stage("install python") {
+            steps {
+                sh """
+                    set -e
+                    apt-get update
+                    apt-get install -y python3 python3-virtualenv
+                """
+        }
         stage("install poetry") {
             steps {
                 sh """
                     set -e
                     export POETRY_HOME=/opt/poetry
-                    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python -
+                    curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
                     ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
                     poetry --version
                 """
@@ -57,15 +62,20 @@ pipeline {
         }
         stage("install podman") {
             steps {
-                sh """
-                    set -e
+                sh '''
+                    set -ex
+
+                    curl -o /usr/local/bin/fuze-overlayfs -L https://github.com/containers/fuse-overlayfs/releases/download/v1.5.0/fuse-overlayfs-x86_64
+                    chmod +x /usrl/local/bin/fuze-overlayfs
+
                     . /etc/os-release
-                    echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_\${VERSION_ID}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
-                    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_\${VERSION_ID}/Release.key | apt-key add -
+                    echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+                    apt-get install -y gpg gpg-agent curl
+                    curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | apt-key add -
                     apt-get update
-                    apt-get install -y podman
+                    apt-get install -y --no-install-recommends podman
                     podman info
-                """
+                '''
             }
         }
 
