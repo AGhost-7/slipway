@@ -58,8 +58,7 @@ def test_run(container_fixture):
 
 
 @pytest.mark.skipif(
-    test_runtime() == "docker",
-    reason="uidmap doesnt work on rootless docker"
+    test_runtime() == "docker", reason="uidmap doesnt work on rootless docker"
 )
 def test_permission(container_fixture):
     output = client.exec_container(
