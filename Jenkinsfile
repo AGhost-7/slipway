@@ -85,6 +85,7 @@ pipeline {
         }
         stage("run podman tests") {
             steps {
+                sh "sleep Infinity"
                 sh "su test-user -c 'poetry run pytest'"
             }
         }
