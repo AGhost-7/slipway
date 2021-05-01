@@ -80,7 +80,9 @@ pipeline {
             }
         }
         stage("create test user") {
-            sh "adduser --uid 1000 --disabled-password --gecos '' test-user"
+            steps {
+                sh "adduser --uid 1000 --disabled-password --gecos '' test-user"
+            }
         }
         stage("run podman tests") {
             steps {
