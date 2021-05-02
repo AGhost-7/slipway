@@ -17,7 +17,10 @@ class FakeArgs(object):
 
 
 def test_initialize(tmp_path):
-    client.remove_image("busybox")
+    try:
+        client.remove_image("busybox")
+    except:
+        pass
     args = FakeArgs("busybox", tmp_path)
     image = Image(client, args)
     image.initialize()
