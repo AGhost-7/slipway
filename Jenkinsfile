@@ -46,19 +46,24 @@ pipeline {
                 """
             }
         }
+        stage("create test user") {
+            steps {
+                sh "adduser --uid 1000 --disabled-password --gecos '' test-user"
+            }
+        }
         stage("install dependencies") {
             steps {
-                sh "poetry install"
+                sh "su test-user -c 'poetry install'"
             }
         }
         stage("run mypy") {
             steps {
-                sh "poetry run mypy ."
+                sh "su test-user -c 'poetry run mypy .'"
             }
         }
         stage("run black") {
             steps {
-                sh "poetry run black --check ."
+                sh "su test-user -c 'poetry run black --check .'"
             }
         }
         stage("install podman") {
@@ -78,14 +83,9 @@ pipeline {
                 '''
             }
         }
-        stage("create test user") {
-            steps {
-                sh "adduser --uid 1000 --disabled-password --gecos '' test-user"
-            }
-        }
         stage("run podman tests") {
             steps {
-                sh "sleep Infinity"
+                #sh "sleep Infinity"
                 sh "su test-user -c 'poetry run pytest'"
             }
         }
