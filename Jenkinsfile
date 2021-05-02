@@ -77,7 +77,7 @@ pipeline {
                     apt-get update
                     apt-get install -y podman
                     podman info
-                    echo 'unqualified-search-registries = ["docker.io"]' >> /etc/containers/registries.conf
+                    sleep Infinity
                 '''
             }
         }
