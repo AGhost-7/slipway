@@ -49,8 +49,7 @@ class Container(object):
             next_mapping = container_id + 1
             for id in rest:
                 if id > container_id:
-                    arguments.append(
-                            f"--{option}={id}:{next_mapping}:1")
+                    arguments.append(f"--{option}={id}:{next_mapping}:1")
                     next_mapping += 1
 
     def _run_arguments(self):

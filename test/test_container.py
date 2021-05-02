@@ -68,6 +68,4 @@ def test_permission(container_fixture):
 
 
 def test_sudo(container_fixture):
-    client.exec_container(
-        container_fixture, ['sudo', 'apt', 'update']
-    )
+    client.exec_container(container_fixture, ["sudo", "apt", "update"])
