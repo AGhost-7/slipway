@@ -1,3 +1,4 @@
+from typing import List
 from os import path, makedirs
 from datetime import datetime
 from .util import snake_case
@@ -16,23 +17,37 @@ class Image(object):
         self.name = args.image
         self._metadata = None
         self._passwd = None
+        self._group = None
+
+    def _cached_file(self, name: str, container_path: str):
+        cache_path = path.join(self.args.cache_directory, name, self.id)
+        if path.exists(cache_path):
+            with open(cache_path) as file:
+                text = file.read()
+        else:
+            text = self.client.image_file(self.name, container_path)
+            makedirs(path.dirname(cache_path), exist_ok=True)
+            with open(cache_path, "w+") as file:
+                file.write(text)
+        return text
 
     def _image_passwd(self):
         if self._passwd is None:
             self._passwd = {}
-            cache_path = path.join(self.args.cache_directory, "passwd", self.id)
-            if path.exists(cache_path):
-                with open(cache_path) as file:
-                    text = file.read()
-            else:
-                text = self.client.image_file(self.name, "/etc/passwd")
-                makedirs(path.dirname(cache_path), exist_ok=True)
-                with open(cache_path, "w+") as file:
-                    file.write(text)
+            text = self._cached_file("passwd", "/etc/passwd")
             for line in text.splitlines():
                 parts = line.split(":")
                 self._passwd[parts[0]] = PasswdEntry(int(parts[2]), int(parts[3]))
         return self._passwd
+
+    def _image_group(self):
+        if self._group is None:
+            self._group = {}
+            text = self._cached_file("group", "/etc/group")
+            for line in text.splitlines():
+                parts = line.split(":")
+                self._group[parts[0]] = int(parts[2])
+        return self._group
 
     def _image_metadata(self):
         if self._metadata is None:
@@ -92,6 +107,14 @@ class Image(object):
         elif self.args.pull and not (self.args.pull_daily and self._pulled_today()):
             self.pull()
             self._create_stale_check_file()
+
+    @property
+    def user_ids(self) -> List[int]:
+        return [entry.uid for entry in self._image_passwd().values()]
+
+    @property
+    def group_ids(self) -> List[int]:
+        return list(self._image_group().values())
 
     @property
     def volumes(self):

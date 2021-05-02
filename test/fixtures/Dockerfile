@@ -1,8 +1,10 @@
 FROM python:3
 
-RUN useradd --uid 1001 --create-home foobar && \
-	apt-get update && \
-	apt-get install -y tmux sudo
+RUN apt-get update && \
+	apt-get install -y tmux sudo && \
+    adduser --uid 1001 --disabled-password --gecos '' foobar && \
+	adduser foobar sudo && \
+	echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 USER foobar
 

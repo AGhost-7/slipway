@@ -65,3 +65,9 @@ def test_permission(container_fixture):
         container_fixture, ["stat", "-c", "%U", "/test-volume"]
     )
     assert "foobar" in output
+
+
+def test_sudo(container_fixture):
+    client.exec_container(
+        container_fixture, ['sudo', 'apt', 'update']
+    )
