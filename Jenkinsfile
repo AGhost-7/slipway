@@ -85,7 +85,7 @@ pipeline {
         }
         stage("run podman tests") {
             steps {
-                sh "su test-user -c 'poetry run pytest'"
+                sh "sudo -u test-user poetry run pytest"
             }
         }
     }
