@@ -76,8 +76,8 @@ pipeline {
                     curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | apt-key add -
                     apt-get update
                     apt-get install -y podman
+                    sed -i 's/unqualified-search-registries.*/unqualified-search-registries = ["docker.io"]/' /etc/containers/registries.conf
                     podman info
-                    sleep Infinity
                 '''
             }
         }
