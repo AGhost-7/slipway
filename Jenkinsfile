@@ -70,15 +70,12 @@ pipeline {
             steps {
                 sh '''
                     set -ex
-                    curl -o /usr/local/bin/fuze-overlayfs -L https://github.com/containers/fuse-overlayfs/releases/download/v1.5.0/fuse-overlayfs-x86_64
-                    chmod +x /usr/local/bin/fuze-overlayfs
-
                     . /etc/os-release
                     echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
                     apt-get install -y gpg gpg-agent curl
                     curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | apt-key add -
                     apt-get update
-                    apt-get install -y --no-install-recommends podman
+                    apt-get install -y podman
                     podman info
                 '''
             }
