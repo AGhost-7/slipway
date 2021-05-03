@@ -40,6 +40,9 @@ class DockerClient(object):
     def has_uidmap(self):
         return False
 
+    def is_rootless(self):
+        return "name=rootless" in self.client.info()["SecurityOptions"]
+
     def image_file(self, name: str, file_path: str) -> Optional[str]:
         container = self.client.containers.create(name)
         try:

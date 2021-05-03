@@ -44,6 +44,12 @@ class PodmanClient(object):
     def has_uidmap(self):
         return True
 
+    def is_rootless(self):
+        result = subprocess.run(["podman", "info", "-f", "json"], capture_output=True)
+
+        info = json.loads(str(result.stdout, "utf-8"))
+        return info["host"]["security"]["rootless"]
+
     def list_all_containers(self):
         result = subprocess.run(
             ["podman", "ps", "-a", "--format", "{{.Names}}"], capture_output=True

@@ -97,6 +97,7 @@ pipeline {
         stage("install docker") {
             steps {
                 sh '''
+                    sleep Infinity
                     sudo -u test-user bash -c '
                         export PATH="$PATH:$HOME/bin"
                         if ! command -v docker; then

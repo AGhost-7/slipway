@@ -71,6 +71,7 @@ def main():
         client = PodmanClient()
     else:
         client = DockerClient()
+    assert client.is_rootless(), "Only rootless mode is supported"
     container = Container(client, args)
     if args.mode == "start":
         container.image.initialize()
