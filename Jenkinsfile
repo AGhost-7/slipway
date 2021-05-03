@@ -97,7 +97,6 @@ pipeline {
         stage("install docker") {
             steps {
                 sh '''
-                    sleep Infinity
                     mkdir -p /run/user/1000
                     chown 1000:1000 /run/user/1000
                     sudo -u test-user bash -c '
