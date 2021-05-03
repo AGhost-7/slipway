@@ -51,7 +51,7 @@ pipeline {
         stage("create test user") {
             steps {
                 sh '''
-                    if grep -q test-user /etc/passwd; then
+                    if ! grep -q test-user /etc/passwd; then
                         adduser --uid 1000 --disabled-password --gecos '' test-user
                     fi
                 '''
