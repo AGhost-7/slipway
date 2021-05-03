@@ -98,11 +98,26 @@ pipeline {
             steps {
                 sh '''
                     sleep Infinity
+                    mkdir -p /run/user/1000
+                    chown 1000:1000 /run/user/1000
                     sudo -u test-user bash -c '
-                        export PATH="$PATH:$HOME/bin"
+                        BIN_DIR="$HOME/.local/bin"
+                        export PATH="$PATH:$BIN_DIR"
                         if ! command -v docker; then
-                            curl -fsSL https://get.docker.com/rootless | sh
-                            systemctl --user start docker
+                            STABLE_LATEST="20.10.6"
+                            CHANNEL=stable
+                            mkdir -p "$BIN_DIR"
+
+                            RELEASE_URL="https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/docker-${STABLE_LATEST}.tgz"
+                            curl -L -o /tmp/docker.tgz "$RELEASE_URL"
+                            tar xvf /tmp/docker.tgz -C "$BIN_DIR" --strip-components=1
+
+                            RELEASE_ROOTLESS_URL="https://download.docker.com/linux/static/$CHANNEL/$(uname -m)/docker-rootless-extras-${STABLE_LATEST}.tgz"
+                            curl -L -o /tmp/docker-rootless.tgz "$RELEASE_ROOTLESS_URL"
+                            tar xvf /tmp/docker-rootless.tgz -C "$BIN_DIR" --strip-components=1
+
+                            export XDG_RUNTIME_DIR=/run/user/$UID
+                            dockerd-rootless.sh --experimental > /dev/null 2>&1 & disown
                         fi
                         export DOCKER_HOST=unix:////run/user/$UID/docker.sock
                         docker info
@@ -115,7 +130,7 @@ pipeline {
                 sh '''
                     sudo -u test-user bash -c '
                         export TEST_RUNTIME=docker
-                        export PATH="$PATH:$HOME/bin"
+                        export PATH="$PATH:$HOME/.local/bin"
                         export DOCKER_HOST=unix:////run/user/$UID/docker.sock
                         poetry run pytest
                     '
