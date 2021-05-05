@@ -18,7 +18,7 @@ class FakeArgs(object):
         self.runtime = client.runtime
         self.runtime_dir = runtime_dir
         self.cache_directory = cache_directory
-        self.network = "host"
+        self.network = "slirp4netns"
 
 
 @pytest.fixture
@@ -69,3 +69,14 @@ def test_permission(container_fixture):
 
 def test_sudo(container_fixture):
     client.exec_container(container_fixture, ["sudo", "apt", "update"])
+
+
+def test_strace(container_fixture):
+    client.exec_container(container_fixture, ["sudo", "strace", "ls"])
+
+
+def test_nmap(container_fixture):
+    output = client.exec_container(
+        container_fixture, ["sudo", "nmap", "-p", "81", "jenkins.jonathan-boudreau.com"]
+    )
+    assert "closed" in output

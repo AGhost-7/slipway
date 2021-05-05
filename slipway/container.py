@@ -65,6 +65,9 @@ class Container(object):
                 # Required for strace and other debugging tools to work.
                 "--cap-add",
                 "SYS_PTRACE",
+                # required for nmap
+                "--cap-add",
+                "NET_RAW",
                 "--rm",
                 "-ti",
                 "--detach-keys",
