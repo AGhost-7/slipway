@@ -100,6 +100,7 @@ pipeline {
                     mkdir -p /run/user/1000
                     chown 1000:1000 /run/user/1000
                     sudo -u test-user bash -c '
+                        set -ex
                         export XDG_RUNTIME_DIR=/run/user/$UID
                         BIN_DIR="$HOME/.local/bin"
                         export PATH="$PATH:$BIN_DIR"
@@ -116,7 +117,7 @@ pipeline {
                             curl -L -o /tmp/docker-rootless.tgz "$RELEASE_ROOTLESS_URL"
                             tar xvf /tmp/docker-rootless.tgz -C "$BIN_DIR" --strip-components=1
 
-                            dockerd-rootless.sh --experimental > /dev/null 2>&1 & disown
+                            dockerd-rootless.sh --experimental & disown
                         fi
                         export DOCKER_HOST=unix:////run/user/$UID/docker.sock
                         docker info
