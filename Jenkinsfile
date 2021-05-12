@@ -118,6 +118,7 @@ pipeline {
                             tar xvf /tmp/docker-rootless.tgz -C "$BIN_DIR" --strip-components=1
 
                             dockerd-rootless.sh --experimental & disown
+                            sleep 5
                         fi
                         export DOCKER_HOST=unix:////run/user/$UID/docker.sock
                         docker info
