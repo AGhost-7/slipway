@@ -100,6 +100,7 @@ pipeline {
                     mkdir -p /run/user/1000
                     chown 1000:1000 /run/user/1000
                     sudo -u test-user bash -c '
+                        export XDG_RUNTIME_DIR=/run/user/$UID
                         BIN_DIR="$HOME/.local/bin"
                         export PATH="$PATH:$BIN_DIR"
                         if ! command -v docker; then
@@ -115,7 +116,6 @@ pipeline {
                             curl -L -o /tmp/docker-rootless.tgz "$RELEASE_ROOTLESS_URL"
                             tar xvf /tmp/docker-rootless.tgz -C "$BIN_DIR" --strip-components=1
 
-                            export XDG_RUNTIME_DIR=/run/user/$UID
                             dockerd-rootless.sh --experimental > /dev/null 2>&1 & disown
                         fi
                         export DOCKER_HOST=unix:////run/user/$UID/docker.sock
@@ -129,6 +129,7 @@ pipeline {
                 sh '''
                     sudo -u test-user bash -c '
                         export TEST_RUNTIME=docker
+                        export XDG_RUNTIME_DIR=/run/user/$UID
                         export PATH="$PATH:$HOME/.local/bin"
                         export DOCKER_HOST=unix:////run/user/$UID/docker.sock
                         poetry run pytest
