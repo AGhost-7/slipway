@@ -2,6 +2,7 @@ from os import environ
 import sys
 from argparse import ArgumentParser
 
+from .xdg_open import XdgOpen
 from .container import Container
 from .configuration import Configuration
 from .client import PodmanClient, DockerClient
@@ -37,8 +38,18 @@ def parse_args(configuration):
     purge_parser = subparsers.add_parser("purge")
     purge_parser.add_argument("image")
 
+    xdg_server = subparsers.add_parser("xdg-server")
+    xdg_server.add_argument("--runtime-dir", default=configuration.runtime_dir)
+    xdg_server_subparser = xdg_server.add_subparsers(dest="command")
+    xdg_start = xdg_server_subparser.add_parser("start")
+    xdg_stop = xdg_server_subparser.add_parser("stop")
+
     args = parser.parse_args()
 
+    return args
+
+
+def apply_alias(configuration, args):
     if args.image in configuration.alias:
         alias = configuration.alias[args.image]
         if "image" in alias:
@@ -55,9 +66,6 @@ def parse_args(configuration):
         if "network" in alias:
             args.network = alias["network"]
 
-    assert args.runtime == "podman", "Only podman is currently supported"
-    return args
-
 
 def main():
     if sys.version_info.major < 3:
@@ -66,21 +74,34 @@ def main():
     configuration = Configuration(environ)
     configuration.load()
     args = parse_args(configuration)
-    client = None
-    if args.runtime == "podman":
-        client = PodmanClient()
+
+    if args.mode == "xdg-server":
+        xdg_open = XdgOpen(args.runtime_dir)
+        if args.command == "start":
+            xdg_open.start_server()
+        elif args.command == "stop":
+            xdg_open.stop_server()
     else:
-        client = DockerClient()
-    assert client.is_rootless(), "Only rootless mode is supported"
-    container = Container(client, args)
-    if args.mode == "start":
-        container.image.initialize()
-        container.volumes.initialize()
-        container.binds.initialize()
-        container.xdg_open.start_server()
-        if container.exists():
-            print("Container {} already exists".format(container.name))
-            sys.exit(1)
-        container.run()
-    elif args.mode == "purge":
-        container.volumes.purge()
+        client = None
+        apply_alias(configuration, args)
+
+        if args.runtime == "podman":
+            client = PodmanClient()
+        else:
+            client = DockerClient()
+        assert client.is_rootless(), "Only rootless mode is supported"
+        container = Container(client, args)
+
+        assert args.runtime == "podman", "Only podman is currently supported"
+
+        if args.mode == "start":
+            container.image.initialize()
+            container.volumes.initialize()
+            container.binds.initialize()
+            container.xdg_open.start_server()
+            if container.exists():
+                print("Container {} already exists".format(container.name))
+                sys.exit(1)
+            container.run()
+        elif args.mode == "purge":
+            container.volumes.purge()

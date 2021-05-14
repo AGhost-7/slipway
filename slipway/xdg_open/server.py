@@ -10,10 +10,16 @@ socket_file = sys.argv[1]
 
 class XdgOpenHandler(StreamRequestHandler):
     def handle(self):
-        url = self.rfile.readline().strip()
+        request = json.loads(self.rfile.readline().strip())
+
         try:
             result = run(
-                ["xdg-open", url], shell=False, check=False, stdout=PIPE, stderr=PIPE
+                ["xdg-open"] + request["args"],
+                shell=False,
+                check=False,
+                stdout=PIPE,
+                stderr=PIPE,
+                cwd=request["cwd"],
             )
             response = json.dumps(
                 {
