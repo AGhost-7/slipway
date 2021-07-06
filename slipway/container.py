@@ -42,7 +42,7 @@ class Container(object):
             arguments.extend(
                 [
                     f"--{option}={container_id}:0:1",
-                    f"--{option}=0:1:{container_id - 1}",
+                    f"--{option}=0:1:{container_id}",
                 ]
             )
             rest.sort()
