@@ -50,7 +50,7 @@ def test_server_calls_xdg_open(tmp_path, xdg_open):
         assert content.strip() == "https://jokes.jonathan-boudreau.com"
 
 
-def test_xdg_mapping(tmp_path, xdg_open: XdgOpen, fake_cli, image_fixture: str):
+def test_xdg_mapping(tmp_path, xdg_open: XdgOpen, image_fixture: str):
     fake_cli = path.join(tmp_path, "xdg-open")
     with open(fake_cli, "w+") as file:
         file.write(
