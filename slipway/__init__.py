@@ -20,6 +20,7 @@ def parse_args(configuration):
     start_parser.add_argument(
         "--mount-docker", action="store_true", default=configuration.mount_docker
     )
+    start_parser.add_argument("--device", action="append", default=configuration.device)
     start_parser.add_argument("--pull", action="store_true", default=configuration.pull)
     start_parser.add_argument(
         "--pull-daily", action="store_true", default=configuration.pull_daily
@@ -65,6 +66,9 @@ def apply_alias(configuration, args):
 
         if "network" in alias:
             args.network = alias["network"]
+
+        if "device" in alias:
+            args.device.extend(alias["device"])
 
 
 def main():

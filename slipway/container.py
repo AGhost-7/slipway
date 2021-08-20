@@ -105,6 +105,10 @@ class Container(object):
             arguments.append("-e")
             arguments.append(env)
 
+        for device in self.args.device or []:
+            arguments.append("--device")
+            arguments.append(device)
+
         for bind in self.binds.list():
             arguments.append("-v")
             argument = bind.host_path + ":" + bind.container_path

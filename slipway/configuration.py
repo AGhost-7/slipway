@@ -26,6 +26,7 @@ class Configuration(object):
         self.mount_docker = False
         self.runtime = "podman"
         self.network = "host"
+        self.device = []
 
     def load(self):
         if path.exists(self.config_path):
@@ -40,6 +41,8 @@ class Configuration(object):
                     self.environment = config["environment"]
                 if "volume" in config:
                     self.volume = config["volume"]
+                if "device" in config:
+                    self.device = config["device"]
                 if "pull" in config:
                     self.pull = config["pull"]
                 if "pull_daily" in config:
