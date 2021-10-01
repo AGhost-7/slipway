@@ -28,6 +28,10 @@ class Configuration(object):
         self.network = "host"
         self.device = []
 
+    @property
+    def log_directory(self) -> str:
+        return path.join(self.data_directory, "logs")
+
     def load(self):
         if path.exists(self.config_path):
             with open(self.config_path) as file_descriptor:

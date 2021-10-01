@@ -12,6 +12,7 @@ def parse_args(configuration):
     parser = ArgumentParser()
     parser.add_argument("--data-directory", default=configuration.data_directory)
     parser.add_argument("--cache-directory", default=configuration.cache_directory)
+    parser.add_argument("--log-directory", default=configuration.log_directory)
     subparsers = parser.add_subparsers(dest="mode")
     subparsers.required = True
 
@@ -44,6 +45,7 @@ def parse_args(configuration):
     xdg_server_subparser = xdg_server.add_subparsers(dest="command")
     xdg_start = xdg_server_subparser.add_parser("start")
     xdg_stop = xdg_server_subparser.add_parser("stop")
+    xdg_logs = xdg_server_subparser.add_parser("logs")
 
     args = parser.parse_args()
 
@@ -80,11 +82,13 @@ def main():
     args = parse_args(configuration)
 
     if args.mode == "xdg-server":
-        xdg_open = XdgOpen(args.runtime_dir)
+        xdg_open = XdgOpen(args.runtime_dir, args.log_directory)
         if args.command == "start":
             xdg_open.start_server()
         elif args.command == "stop":
             xdg_open.stop_server()
+        elif args.command == "logs":
+            print(xdg_open.logs())
     else:
         client = None
         apply_alias(configuration, args)

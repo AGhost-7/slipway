@@ -11,7 +11,7 @@ class Container(object):
     def __init__(self, client, args):
         self.client = client
         self.args = args
-        self.xdg_open = XdgOpen(path.join(args.runtime_dir, "slipway"))
+        self.xdg_open = XdgOpen(args.runtime_dir, args.log_directory)
         self.image = Image(self.client, self.args)
         self.volumes = Volumes(self.client, self.args, self.image)
         self.binds = Binds(self.client, self.args, self.image)

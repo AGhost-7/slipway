@@ -1,22 +1,19 @@
-from subprocess import Popen, DEVNULL
+from subprocess import Popen, DEVNULL, PIPE
 import os
 from os import path
+from pathlib import Path
 
 
 class XdgOpen(object):
-    def __init__(self, slipway_dir):
-        self._script_dir = path.dirname(path.realpath(__file__))
-        self._slipway_dir = slipway_dir
-        self._socket_file = path.join(slipway_dir, "xdg-open.sock")
-        self._pid_file = path.join(slipway_dir, "xdg-open.pid")
-
-    @property
-    def runtime_dir(self):
-        return self._slipway_dir
+    def __init__(self, runtime_dir, logs_directory):
+        self._socket_file = Path(runtime_dir) / "slipway" / "xdg-open.sock"
+        self._pid_file = Path(runtime_dir) / "slipway" / "xdg-open.pid"
+        self._log_file = Path(logs_directory) / "xdg-server.log"
+        self._script_dir = Path(__file__).parent
 
     @property
     def client_path(self):
-        return path.join(self._script_dir, "client.py")
+        return self._script_dir / "client.py"
 
     def _kill(self, code):
         with open(self._pid_file) as file:
@@ -40,10 +37,10 @@ class XdgOpen(object):
             pass
 
     def _start_background_process(self, child_process_args):
-        script_dir = path.dirname(path.realpath(__file__))
-        server_script = path.join(script_dir, "server.py")
+        server_script = self._script_dir / "server.py"
+        self._log_file.parent.mkdir(parents=True, exist_ok=True)
         process = Popen(
-            ["python3", server_script, self._socket_file],
+            ["python3", server_script, self._socket_file, self._log_file],
             stdin=DEVNULL,
             stdout=DEVNULL,
             stderr=DEVNULL,
@@ -53,10 +50,9 @@ class XdgOpen(object):
             file.write(str(process.pid))
 
     def start_server(self, **kwargs):
-        if not path.exists(self._slipway_dir):
-            os.makedirs(self._slipway_dir)
+        self._pid_file.parent.mkdir(parents=True, exist_ok=True)
 
-        if path.exists(self._pid_file):
+        if self._pid_file.exists():
             if not self.is_server_running():
                 self._remove_file(self._pid_file)
                 self._remove_file(self._socket_file)
@@ -67,3 +63,9 @@ class XdgOpen(object):
     def stop_server(self):
         if self.is_server_running():
             self._kill(15)  # SIGTERM
+        else:
+            print('Server is not running')
+
+    def logs(self) -> str:
+        with open(self._log_file) as file:
+            return file.read()

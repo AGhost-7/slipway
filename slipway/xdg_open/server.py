@@ -4,22 +4,31 @@ import json
 import sys
 import os
 import stat
+from pathlib import Path
+
 
 socket_file = sys.argv[1]
+log_file = open(sys.argv[2], "w+")
 
+sys.stdout = log_file
+sys.stderr = sys.stdout
 
 class XdgOpenHandler(StreamRequestHandler):
     def handle(self):
         request = json.loads(self.rfile.readline().strip())
-
+        cwd = Path(request["cwd"])
+        if not cwd.exists():
+            print(f"The path {cwd} does not exist on the host, ignoring", file=sys.stdout)
+            cwd = None
         try:
+            print(f"Running xdg-open with arguments {request['args']}")
             result = run(
                 ["xdg-open"] + request["args"],
                 shell=False,
                 check=False,
                 stdout=PIPE,
                 stderr=PIPE,
-                cwd=request["cwd"],
+                cwd=cwd,
             )
             response = json.dumps(
                 {
@@ -43,4 +52,8 @@ class XdgOpenHandler(StreamRequestHandler):
 
 with UnixStreamServer(socket_file, XdgOpenHandler) as server:
     os.chmod(socket_file, stat.S_IRUSR | stat.S_IWUSR)
-    server.serve_forever()
+    try:
+        print('Starting server on socket', socket_file, file=sys.stdout)
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
