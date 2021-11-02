@@ -64,7 +64,7 @@ class XdgOpen(object):
         if self.is_server_running():
             self._kill(15)  # SIGTERM
         else:
-            print('Server is not running')
+            print("Server is not running")
 
     def logs(self) -> str:
         with open(self._log_file) as file:

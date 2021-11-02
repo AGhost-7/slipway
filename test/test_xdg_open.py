@@ -7,24 +7,30 @@ import os
 import sys
 import time
 from .util import create_client
+from pathlib import Path
 
 
 @fixture
-def xdg_open(tmp_path):
-    runtime_dir = tmp_path / "slipway"
-    xdg_open = XdgOpen(runtime_dir)
+def runtime_dir(tmp_path: Path):
+    return tmp_path / "slipway"
+
+
+@fixture
+def xdg_open(tmp_path: Path, runtime_dir: Path):
+    logs_directory = tmp_path / "logs"
+    xdg_open = XdgOpen(runtime_dir, logs_directory)
     yield xdg_open
     if xdg_open.is_server_running():
         xdg_open.stop_server()
         pass
 
 
-def test_start_server(xdg_open):
+def test_start_server(xdg_open: XdgOpen):
     xdg_open.start_server()
     assert xdg_open.is_server_running()
 
 
-def test_server_calls_xdg_open(tmp_path, xdg_open):
+def test_server_calls_xdg_open(tmp_path: Path, runtime_dir: Path, xdg_open: XdgOpen):
     fake_cli = path.join(tmp_path, "xdg-open")
     with open(fake_cli, "w+") as file:
         file.write("#!/bin/sh\n" f"echo $@ > {tmp_path}/args.txt")
@@ -40,7 +46,7 @@ def test_server_calls_xdg_open(tmp_path, xdg_open):
 
     result = run(
         [xdg_open.client_path, "https://jokes.jonathan-boudreau.com"],
-        env={**environ, "SLIPWAY_RUNTIME_DIR": xdg_open.runtime_dir},
+        env={**environ, "SLIPWAY_RUNTIME_DIR": str(runtime_dir)},
     )
 
     assert result.returncode == 0
@@ -50,7 +56,9 @@ def test_server_calls_xdg_open(tmp_path, xdg_open):
         assert content.strip() == "https://jokes.jonathan-boudreau.com"
 
 
-def test_xdg_mapping(tmp_path, xdg_open: XdgOpen, image_fixture: str):
+def test_xdg_mapping(
+    tmp_path: Path, runtime_dir: Path, xdg_open: XdgOpen, image_fixture: str
+):
     fake_cli = path.join(tmp_path, "xdg-open")
     with open(fake_cli, "w+") as file:
         file.write(
@@ -76,7 +84,7 @@ def test_xdg_mapping(tmp_path, xdg_open: XdgOpen, image_fixture: str):
             "-v",
             f"{xdg_open.client_path}:/usr/bin/xdg-open",
             "-v",
-            f"{xdg_open.runtime_dir}:/run/slipway",
+            f"{runtime_dir}:/run/slipway",
             "-v",
             f"{os.getcwd()}:/workspace",
             "python:3",

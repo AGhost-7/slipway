@@ -1,0 +1,29 @@
+name: Test
+on: [push]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install python
+        run: |
+          set -ex
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-virtualenv
+
+      - name: install poetry
+        run: |
+          set -ex
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/install-poetry.py | python3 -
+          poetry --version
+
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: install dependencies
+        run: poetry install
+
+      - name: run mypy
+        run: poetry run mypy .
+
+      - name: run black
+        run: poetry run black .
