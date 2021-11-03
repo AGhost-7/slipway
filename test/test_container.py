@@ -9,7 +9,7 @@ client = create_client()
 
 
 class FakeArgs(object):
-    def __init__(self, workspace, runtime_dir, cache_directory):
+    def __init__(self, workspace, runtime_dir, cache_directory, logs_directory):
         self.image = "image-fixture"
         self.volume = []
         self.environment = []
@@ -17,6 +17,7 @@ class FakeArgs(object):
         self.mount_docker = False
         self.runtime = client.runtime
         self.runtime_dir = runtime_dir
+        self.log_directory = logs_directory
         self.cache_directory = cache_directory
         self.network = "slirp4netns"
 
@@ -30,7 +31,14 @@ def container_fixture(tmp_path, image_fixture):
     (runtime_dir / "slipway").mkdir()
     cache_directory = tmp_path / "cache_directory"
     cache_directory.mkdir(parents=True)
-    args = FakeArgs(str(workspace), str(runtime_dir), str(cache_directory))
+    logs_directory = tmp_path / "logs"
+    logs_directory.mkdir(parents=True)
+    args = FakeArgs(
+        workspace=str(workspace),
+        runtime_dir=str(runtime_dir),
+        cache_directory=str(cache_directory),
+        logs_directory=logs_directory,
+    )
     client = create_client()
     client.force_kill_container("slipway_image_fixture")
     master_fd, slave_fd = pty.openpty()

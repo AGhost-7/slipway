@@ -7,7 +7,7 @@ import stat
 from pathlib import Path
 
 
-socket_file = sys.argv[1]
+socket_file = Path(sys.argv[1])
 log_file = open(sys.argv[2], "w+")
 
 sys.stdout = log_file
@@ -17,8 +17,8 @@ sys.stderr = sys.stdout
 class XdgOpenHandler(StreamRequestHandler):
     def handle(self):
         request = json.loads(self.rfile.readline().strip())
-        cwd = Path(request["cwd"])
-        if not cwd.exists():
+        cwd = request["cwd"]
+        if cwd is not None and not Path(cwd).exists():
             print(
                 f"The path {cwd} does not exist on the host, ignoring", file=sys.stdout
             )
@@ -53,7 +53,10 @@ class XdgOpenHandler(StreamRequestHandler):
             self.request.sendall(bytes(response + "\n", "utf8"))
 
 
-with UnixStreamServer(socket_file, XdgOpenHandler) as server:
+if socket_file.exists():
+    socket_file.unlink()
+
+with UnixStreamServer(str(socket_file), XdgOpenHandler) as server:
     os.chmod(socket_file, stat.S_IRUSR | stat.S_IWUSR)
     try:
         print("Starting server on socket", socket_file, file=sys.stdout)

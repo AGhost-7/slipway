@@ -11,14 +11,9 @@ from pathlib import Path
 
 
 @fixture
-def runtime_dir(tmp_path: Path):
-    return tmp_path / "slipway"
-
-
-@fixture
-def xdg_open(tmp_path: Path, runtime_dir: Path):
+def xdg_open(tmp_path: Path):
     logs_directory = tmp_path / "logs"
-    xdg_open = XdgOpen(runtime_dir, logs_directory)
+    xdg_open = XdgOpen(tmp_path, logs_directory)
     yield xdg_open
     if xdg_open.is_server_running():
         xdg_open.stop_server()
@@ -30,15 +25,14 @@ def test_start_server(xdg_open: XdgOpen):
     assert xdg_open.is_server_running()
 
 
-def test_server_calls_xdg_open(tmp_path: Path, runtime_dir: Path, xdg_open: XdgOpen):
+def test_server_calls_xdg_open(tmp_path: Path, xdg_open: XdgOpen):
     fake_cli = path.join(tmp_path, "xdg-open")
     with open(fake_cli, "w+") as file:
         file.write("#!/bin/sh\n" f"echo $@ > {tmp_path}/args.txt")
     os.chmod(fake_cli, 0o700)
 
     sub_env = environ.copy()
-    sub_env["PATH"] = str(tmp_path)
-    shutil.copy2(sys.executable, tmp_path / "python3")
+    sub_env["PATH"] = f"{str(tmp_path)}:{sub_env['PATH']}"
     xdg_open.start_server(env=sub_env)
     assert xdg_open.is_server_running()
     # server takes a bit of time to start up...
@@ -46,7 +40,7 @@ def test_server_calls_xdg_open(tmp_path: Path, runtime_dir: Path, xdg_open: XdgO
 
     result = run(
         [xdg_open.client_path, "https://jokes.jonathan-boudreau.com"],
-        env={**environ, "SLIPWAY_RUNTIME_DIR": str(runtime_dir)},
+        env={**environ, "SLIPWAY_RUNTIME_DIR": str(tmp_path / "slipway")},
     )
 
     assert result.returncode == 0
@@ -56,9 +50,7 @@ def test_server_calls_xdg_open(tmp_path: Path, runtime_dir: Path, xdg_open: XdgO
         assert content.strip() == "https://jokes.jonathan-boudreau.com"
 
 
-def test_xdg_mapping(
-    tmp_path: Path, runtime_dir: Path, xdg_open: XdgOpen, image_fixture: str
-):
+def test_xdg_mapping(tmp_path: Path, xdg_open: XdgOpen, image_fixture: str):
     fake_cli = path.join(tmp_path, "xdg-open")
     with open(fake_cli, "w+") as file:
         file.write(
@@ -68,8 +60,7 @@ def test_xdg_mapping(
     os.chmod(fake_cli, 0o700)
 
     sub_env = environ.copy()
-    sub_env["PATH"] = str(tmp_path)
-    shutil.copy2(sys.executable, tmp_path / "python3")
+    sub_env["PATH"] = f"{str(tmp_path)}:{sub_env['PATH']}"
     xdg_open.start_server(env=sub_env)
     assert xdg_open.is_server_running()
     time.sleep(1)
@@ -84,7 +75,7 @@ def test_xdg_mapping(
             "-v",
             f"{xdg_open.client_path}:/usr/bin/xdg-open",
             "-v",
-            f"{runtime_dir}:/run/slipway",
+            f"{tmp_path / 'slipway'}:/run/slipway",
             "-v",
             f"{os.getcwd()}:/workspace",
             "python:3",
