@@ -20,6 +20,7 @@ class FakeArgs(object):
         self.log_directory = logs_directory
         self.cache_directory = cache_directory
         self.network = "slirp4netns"
+        self.device = []
 
 
 @pytest.fixture
@@ -76,7 +77,7 @@ def test_permission(container_fixture):
 
 
 def test_sudo(container_fixture):
-    client.exec_container(container_fixture, ["sudo", "apt", "update"])
+    client.exec_container(container_fixture, ["sudo", "apt-get", "update"])
 
 
 def test_strace(container_fixture):

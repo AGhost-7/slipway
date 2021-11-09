@@ -27,3 +27,16 @@ jobs:
 
       - name: run black
         run: poetry run black .
+
+      - name: install podman
+        run: |
+          . /etc/os-release
+          echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/ /" > /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list
+          sudo apt-get install -y gpg gpg-agent curl
+          curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install -y podman
+          sudo sed -i 's/unqualified-search-registries.*/unqualified-search-registries = ["docker.io"]/' /etc/containers/registries.conf
+
+      - name: run tests
+        run: poetry run pytest
