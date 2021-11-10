@@ -14,5 +14,5 @@ def image_fixture():
         client = docker.from_env()
         client.images.build(tag=tag, path=context_path, pull=True)
     else:
-        subprocess.run(["podman", "build", "-t", "--pull", tag, context_path])
+        subprocess.run(["podman", "build", "--tag", tag, "--pull", context_path])
     return tag
