@@ -26,7 +26,6 @@ def test_start_server(command_proxy: CommandProxy):
 
 
 def test_server_calls_command_proxy(tmp_path: Path, command_proxy: CommandProxy):
-    # TODO: add symlink for it to detect the correct command to proxy
     fake_cli = tmp_path / "xdg-open"
     with open(fake_cli, "w+") as file:
         file.write("#!/bin/sh\n" f"echo $@ > {tmp_path}/args.txt")

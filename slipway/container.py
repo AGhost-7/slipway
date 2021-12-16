@@ -17,13 +17,6 @@ class Container(object):
         self.binds = Binds(self.client, self.args, self.image)
         self.name = "slipway_" + snake_case(self.args.image)
 
-    def _entrypoint_script(self):
-        module_dir = path.dirname(path.abspath(__file__))
-        return path.abspath(path.join(module_dir, "./entrypoint.py"))
-
-    def _volumes_env(self):
-        return ",".join(list(map(lambda vol: vol.path, self.volumes.list())))
-
     def _append_docker_gid(self, arguments):
         with open("/etc/group") as file_descriptor:
             content = file_descriptor.read()
