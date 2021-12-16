@@ -2,7 +2,7 @@ from os import environ
 import sys
 from argparse import ArgumentParser
 
-from .xdg_open import XdgOpen
+from .command_proxy import CommandProxy
 from .container import Container
 from .configuration import Configuration
 from .client import PodmanClient, DockerClient
@@ -40,12 +40,12 @@ def parse_args(configuration):
     purge_parser = subparsers.add_parser("purge")
     purge_parser.add_argument("image")
 
-    xdg_server = subparsers.add_parser("xdg-server")
-    xdg_server.add_argument("--runtime-dir", default=configuration.runtime_dir)
-    xdg_server_subparser = xdg_server.add_subparsers(dest="command")
-    xdg_start = xdg_server_subparser.add_parser("start")
-    xdg_stop = xdg_server_subparser.add_parser("stop")
-    xdg_logs = xdg_server_subparser.add_parser("logs")
+    command_proxy = subparsers.add_parser("command-proxy")
+    command_proxy.add_argument("--runtime-dir", default=configuration.runtime_dir)
+    command_proxy_subparser = command_proxy.add_subparsers(dest="command")
+    proxy_start = command_proxy_subparser.add_parser("start")
+    proxy_stop = command_proxy_subparser.add_parser("stop")
+    proxy_logs = command_proxy_subparser.add_parser("logs")
 
     args = parser.parse_args()
 
@@ -81,14 +81,14 @@ def main():
     configuration.load()
     args = parse_args(configuration)
 
-    if args.mode == "xdg-server":
-        xdg_open = XdgOpen(args.runtime_dir, args.log_directory)
+    if args.mode == "command-proxy":
+        command_proxy = CommandProxy(args.runtime_dir, args.log_directory)
         if args.command == "start":
-            xdg_open.start_server()
+            command_proxy.start_server()
         elif args.command == "stop":
-            xdg_open.stop_server()
+            command_proxy.stop_server()
         elif args.command == "logs":
-            print(xdg_open.logs())
+            print(command_proxy.logs())
     else:
         client = None
         apply_alias(configuration, args)
@@ -106,7 +106,7 @@ def main():
             container.image.initialize()
             container.volumes.initialize()
             container.binds.initialize()
-            container.xdg_open.start_server()
+            container.command_proxy.start_server()
             if container.exists():
                 print("Container {} already exists".format(container.name))
                 sys.exit(1)

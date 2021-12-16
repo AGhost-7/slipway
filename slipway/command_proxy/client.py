@@ -10,7 +10,7 @@ import os
 args = sys.argv[1:]
 
 socket_file = path.join(
-    environ.get("SLIPWAY_RUNTIME_DIR", "/run/slipway"), "xdg-open.sock"
+    environ.get("SLIPWAY_RUNTIME_DIR", "/run/slipway"), "command-proxy.sock"
 )
 
 
@@ -46,9 +46,11 @@ def wait_result() -> Optional[dict]:
 
 with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
     sock.connect(socket_file)
+    command = path.basename(sys.argv[0])
     payload = json.dumps(
         {
             "args": args,
+            "command": command,
             "cwd": host_cwd(),
         }
     )

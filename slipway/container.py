@@ -4,14 +4,14 @@ from .image import Image
 from .volumes import Volumes
 from .binds import Binds
 from .util import snake_case
-from .xdg_open import XdgOpen
+from .command_proxy import CommandProxy
 
 
 class Container(object):
     def __init__(self, client, args):
         self.client = client
         self.args = args
-        self.xdg_open = XdgOpen(args.runtime_dir, args.log_directory)
+        self.command_proxy = CommandProxy(args.runtime_dir, args.log_directory)
         self.image = Image(self.client, self.args)
         self.volumes = Volumes(self.client, self.args, self.image)
         self.binds = Binds(self.client, self.args, self.image)
@@ -90,9 +90,9 @@ class Container(object):
         arguments.extend(
             [
                 "-v",
-                "{}:/usr/bin/xdg-open".format(self.xdg_open.client_path),
+                "{}:/usr/bin/xdg-open".format(self.command_proxy.client_path),
                 "-v",
-                "{}/slipway:/run/slipway".format(self.args.runtime_dir),
+                "{}/slipway:/run/slipway:shared".format(self.args.runtime_dir),
             ]
         )
 
