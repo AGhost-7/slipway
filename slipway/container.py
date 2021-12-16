@@ -83,6 +83,8 @@ class Container(object):
                 "GH_PASS",
                 "-e",
                 "DISPLAY",
+                "-e",
+                f"SLIPWAY_COMMAND_PROXY_URL={self.command_proxy.server_url}",
             ]
         )
         arguments.append("--network={}".format(self.args.network))

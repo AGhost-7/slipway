@@ -2,6 +2,7 @@ from subprocess import Popen, DEVNULL, PIPE
 import os
 from os import path
 from pathlib import Path
+import sys
 
 
 class CommandProxy(object):
@@ -15,6 +16,13 @@ class CommandProxy(object):
     @property
     def client_path(self):
         return self._script_dir / "client.py"
+
+    @property
+    def server_url(self):
+        if sys.platform == "linux":
+            return "unix:///run/slipway/command-proxy.sock"
+        else:
+            return "tcp://host.docker.internal:7272"
 
     def _kill(self, code):
         with open(self._pid_file) as file:
@@ -42,12 +50,17 @@ class CommandProxy(object):
         self._log_file.parent.mkdir(parents=True, exist_ok=True)
         self._log_file.touch(exist_ok=True)
         log_file = open(self._log_file)
+        bind_url = (
+            f"unix://{self._socket_file}"
+            if sys.platform == "linux"
+            else "tcp://127.0.0.1:7272"
+        )
         process = Popen(
-            ["python3", server_script, self._socket_file] + self._commands,
+            ["python3", server_script, bind_url] + self._commands,
             stdin=DEVNULL,
             stdout=log_file,
             stderr=log_file,
-            **child_process_args
+            **child_process_args,
         )
         with open(self._pid_file, "w+") as file:
             file.write(str(process.pid))

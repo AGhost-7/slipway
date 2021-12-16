@@ -1,13 +1,14 @@
-from socketserver import UnixStreamServer, StreamRequestHandler
+from socketserver import UnixStreamServer, TCPServer, StreamRequestHandler, BaseServer
 from subprocess import run, PIPE
 import json
 import sys
 import os
 import stat
 from pathlib import Path
+from urllib.parse import urlparse
 
 
-socket_file = Path(sys.argv[1])
+url = urlparse(sys.argv[1])
 allowed_commands = sys.argv[2:]
 
 
@@ -68,13 +69,26 @@ class CommandProxyHandler(StreamRequestHandler):
             self._run_command(command, request["args"], cwd)
 
 
-if socket_file.exists():
-    socket_file.unlink()
-
-with UnixStreamServer(str(socket_file), CommandProxyHandler) as server:
-    os.chmod(socket_file, stat.S_IRUSR | stat.S_IWUSR)
+def serve(server: BaseServer):
     try:
         print("Starting server on socket", socket_file, file=sys.stdout)
         server.serve_forever()
     except KeyboardInterrupt:
         pass
+
+
+assert url.scheme in ("unix", "tcp"), f"Invalid scheme {url.scheme}"
+
+if url.scheme == "unix":
+    socket_file = Path(url.path)
+
+    if socket_file.exists():
+        socket_file.unlink()
+
+    with UnixStreamServer(str(socket_file), CommandProxyHandler) as server:
+        os.chmod(socket_file, stat.S_IRUSR | stat.S_IWUSR)
+        serve(server)
+else:
+    [host, port] = url.netloc.split(":")
+    with TCPServer((host, int(port)), CommandProxyHandler) as tcp_server:
+        serve(tcp_server)

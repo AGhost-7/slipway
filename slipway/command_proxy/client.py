@@ -8,12 +8,11 @@ import sys
 from os import path, environ
 import os
 import json
+from urllib.parse import urlparse
 
 args = sys.argv[1:]
 
-socket_file = path.join(
-    environ.get("SLIPWAY_RUNTIME_DIR", "/run/slipway"), "command-proxy.sock"
-)
+proxy_url = urlparse(environ["SLIPWAY_COMMAND_PROXY_URL"])
 
 
 def host_cwd() -> Optional[str]:
@@ -47,8 +46,13 @@ def wait_result() -> Optional[dict]:
     return None
 
 
-with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-    sock.connect(socket_file)
+socket_type = socket.AF_UNIX if proxy_url.scheme == "unix" else socket.AF_INET
+with socket.socket(socket_type, socket.SOCK_STREAM) as sock:
+    if proxy_url.scheme == "unix":
+        sock.connect(proxy_url.path)
+    else:
+        [host, port] = proxy_url.netloc.split(":")
+        sock.connect((host, int(port)))
     command = path.basename(sys.argv[0])
     payload = json.dumps(
         {
