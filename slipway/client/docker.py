@@ -5,6 +5,7 @@ from docker.errors import ImageNotFound
 import docker
 import subprocess
 from typing import Optional
+import sys
 
 
 class DockerClient(object):
@@ -14,6 +15,14 @@ class DockerClient(object):
 
     def list_volume_names(self):
         return map(lambda volume: volume.name, self.client.volumes.list())
+
+    def volume_host_path(self, name):
+        if sys.platform != "linux":
+            # there is no host storage for volumes on docker for mac due to
+            # it being virtualized
+            return None
+        volume = self.client.volumes.get(name)
+        return volume.attrs["Mountpoint"]
 
     def create_volume(self, name):
         self.client.volumes.create(name)

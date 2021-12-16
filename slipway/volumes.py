@@ -2,10 +2,15 @@ from .util import snake_case
 
 
 class Volume(object):
-    def __init__(self, image_name, path):
+    def __init__(self, client, image_name, path):
         base = "slipway_" + snake_case(image_name)
         self.name = base + "_" + snake_case(path)
         self.path = path
+        self._client = client
+
+    @property
+    def host_path(self):
+        return self._client.volume_host_path(self.name)
 
 
 class Volumes(object):
@@ -18,7 +23,10 @@ class Volumes(object):
         """
         Lists all volumes
         """
-        return map(lambda volume: Volume(self.image.name, volume), self.image.volumes)
+        return map(
+            lambda volume: Volume(self.client, self.image.name, volume),
+            self.image.volumes,
+        )
 
     def purge(self):
         """

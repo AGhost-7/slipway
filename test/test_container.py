@@ -1,5 +1,7 @@
 import pytest
 from slipway.container import Container
+from slipway.argument_parser import parse_args
+from slipway.configuration import Configuration
 from subprocess import Popen, TimeoutExpired
 import pty
 import os
@@ -8,50 +10,41 @@ from .util import create_client, test_runtime
 client = create_client()
 
 
-class FakeArgs(object):
-    def __init__(self, workspace, runtime_dir, cache_directory, logs_directory):
-        self.image = "image-fixture"
-        self.volume = []
-        self.environment = []
-        self.workspace = workspace
-        self.mount_docker = False
-        self.runtime = client.runtime
-        self.runtime_dir = runtime_dir
-        self.log_directory = logs_directory
-        self.cache_directory = cache_directory
-        self.network = "slirp4netns"
-        self.device = []
-
-
 @pytest.fixture
 def container_fixture(tmp_path, image_fixture):
-    workspace = tmp_path / "workspace"
+    home = tmp_path / "home"
+    workspace = home / "workspace"
     workspace.mkdir(parents=True)
-    runtime_dir = tmp_path / "runtime"
+    runtime_dir = home / "runtime"
     runtime_dir.mkdir(parents=True)
     (runtime_dir / "slipway").mkdir()
-    cache_directory = tmp_path / "cache_directory"
-    cache_directory.mkdir(parents=True)
-    logs_directory = tmp_path / "logs"
-    logs_directory.mkdir(parents=True)
-    args = FakeArgs(
-        workspace=str(workspace),
-        runtime_dir=str(runtime_dir),
-        cache_directory=str(cache_directory),
-        logs_directory=logs_directory,
+    (home / ".local" / "share").mkdir(parents=True)
+    (home / ".cache").mkdir(parents=True)
+
+    configuration = Configuration(
+        {
+            "HOME": home,
+            "XDG_RUNTIME_DIR": runtime_dir,
+        }
     )
+    args = parse_args(
+        configuration, ["start", "--network", "slirp4netns", image_fixture]
+    )
+
     client = create_client()
     client.force_kill_container("slipway_image_fixture")
     master_fd, slave_fd = pty.openpty()
+
     container = Container(client, args)
-    args = Container(client, args)._run_arguments()
+    run_args = Container(client, args)._run_arguments()
 
     process = Popen(
-        args, preexec_fn=os.setsid, stdout=slave_fd, stderr=slave_fd, stdin=slave_fd
+        run_args, preexec_fn=os.setsid, stdout=slave_fd, stderr=slave_fd, stdin=slave_fd
     )
     try:
         process.wait(timeout=2)
         process.communicate()
+        print(process.stdout, process.stderr)
         assert process.returncode is None
     except TimeoutExpired:
         pass

@@ -31,6 +31,13 @@ class PodmanClient(object):
 
         return images
 
+    def volume_host_path(self, name) -> str:
+        result = subprocess.run(
+            ["podman", "image", "inspect", "--format", "{{.Mountpoint}}", name],
+            capture_output=True,
+        )
+        return str(result.stdout, "utf8").strip()
+
     def remove_volume(self, name):
         result = subprocess.run(["podman", "volume", "remove", name])
         assert result.returncode == 0

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
 from typing import Optional
 import socket
 import json
 import sys
 from os import path, environ
 import os
+import json
 
 args = sys.argv[1:]
 
@@ -16,13 +18,14 @@ socket_file = path.join(
 
 def host_cwd() -> Optional[str]:
     cwd = os.getcwd()
-    with open("/proc/self/mountinfo") as file:
-        for line in file.read().strip().splitlines():
-            columns = line.split(" ")
-            host_path = columns[3]
-            container_path = columns[4]
-            if container_path != "/" and cwd.startswith(container_path):
-                return cwd.replace(container_path, host_path)
+    mapping_path = Path("/run/user") / str(os.getuid()) / "slipway-mapping.json"
+    if not mapping_path.exists():
+        return None
+    with mapping_path.open() as file:
+        mappings = json.loads(file.read())
+    for mapping in mappings:
+        if cwd.startswith(mapping["container"]):
+            return cwd.replace(mapping["container"], mapping["host"])
     return None
 
 

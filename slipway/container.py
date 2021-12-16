@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 import os
 from os import path
 from .image import Image
@@ -44,6 +46,14 @@ class Container(object):
                 if id > container_id:
                     arguments.append(f"--{option}={id}:{next_mapping}:1")
                     next_mapping += 1
+
+    def _create_mapping_file(self, mappings):
+        mappings_dir = Path(self.args.data_directory) / "mappings"
+        mappings_dir.mkdir(parents=True, exist_ok=True)
+        mappings_file = mappings_dir / f"{self.name}.json"
+        with open(mappings_file, "w") as file:
+            file.write(json.dumps(mappings))
+        return mappings_file
 
     def _run_arguments(self):
         arguments = []
@@ -102,20 +112,34 @@ class Container(object):
             arguments.append("--device")
             arguments.append(device)
 
+        mappings = []
         for bind in self.binds.list():
             arguments.append("-v")
             argument = bind.host_path + ":" + bind.container_path
             if "ro" in bind.type:
                 argument += ":ro"
             arguments.append(argument)
+            mappings.append({"host": bind.host_path, "container": bind.container_path})
 
         for volume in self.volumes.list():
             arguments.append("--mount")
             arguments.append(
                 "type=volume,source={},target={}".format(volume.name, volume.path)
             )
+            host_path = volume.host_path
+            if host_path is not None:
+                mappings.append({"host": host_path, "container": volume.path})
 
+        mapping_file = self._create_mapping_file(mappings)
+
+        arguments.extend(
+            [
+                "-v",
+                f"{mapping_file}:/run/user/{self.image.user_id}/slipway-mapping.json",
+            ]
+        )
         arguments.append(self.image.name)
+
         return arguments
 
     def exists(self):
