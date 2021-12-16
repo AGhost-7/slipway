@@ -59,6 +59,8 @@ class Binds(object):
             # TODO: find a way to delegate to the image instead.
             ("f", ".yarnrc"),
             ("f", ".cargo/credentials"),
+            ("d", ".kube"),
+            ("d", ".azure"),
             ("f", ".pypirc"),
         ]
         for type, mapping in home_mappings:

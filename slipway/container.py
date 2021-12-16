@@ -92,7 +92,7 @@ class Container(object):
                 "-v",
                 "{}:/usr/bin/xdg-open".format(self.command_proxy.client_path),
                 "-v",
-                "{}/slipway:/run/slipway:shared".format(self.args.runtime_dir),
+                "{}/slipway:/run/slipway".format(self.args.runtime_dir),
             ]
         )
 
