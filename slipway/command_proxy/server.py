@@ -22,6 +22,16 @@ class CommandProxyHandler(StreamRequestHandler):
             cwd = None
         return cwd
 
+    def _translate_darwin_call(self, command, args):
+        if command == "xdg-open":
+            return ("open", args)
+        elif command == "xclip":
+            if "-o" not in args and "-out" not in args:
+                return ("pbcopy", args)
+            else:
+                return ("pbpaste", args)
+        return (command, args)
+
     def _run_command(self, command, args, cwd):
         try:
             print(f"Running {command} with arguments {args}")
@@ -66,7 +76,10 @@ class CommandProxyHandler(StreamRequestHandler):
             self.request.sendall(bytes(response + "\n", "utf-8"))
         else:
             cwd = self._request_cwd(request)
-            self._run_command(command, request["args"], cwd)
+            args = request["args"]
+            if sys.platform != "linux":
+                (command, args) = self._translate_call(command, args)
+            self._run_command(command, args, cwd)
 
 
 def serve(server: BaseServer):
