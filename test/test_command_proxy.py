@@ -51,7 +51,10 @@ def test_server_calls_command_proxy(tmp_path: Path, command_proxy: CommandProxy)
 
     result = run(
         [xdg_proxy, "https://jokes.jonathan-boudreau.com"],
-        env={**environ, "SLIPWAY_RUNTIME_DIR": str(tmp_path / "slipway")},
+        env={
+            **environ,
+            "SLIPWAY_COMMAND_PROXY_URL": f"unix://{tmp_path}/slipway/command-proxy.sock",
+        },
     )
 
     assert result.returncode == 0
@@ -90,6 +93,8 @@ def test_xdg_mapping(tmp_path: Path, command_proxy: CommandProxy, image_fixture:
             f"{command_proxy.client_path}:/usr/bin/xdg-open",
             "-v",
             f"{tmp_path / 'slipway'}:/run/slipway",
+            "-e",
+            f"SLIPWAY_COMMAND_PROXY_URL={command_proxy.server_url}",
             "-v",
             f"{os.getcwd()}:/workspace",
             "-v" f"{mapping_file}:/run/user/1000/slipway-mapping.json",

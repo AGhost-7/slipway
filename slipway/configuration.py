@@ -1,23 +1,34 @@
 import yaml
 import os
-from os import path
+from pathlib import Path
+import sys
 
 
 class Configuration(object):
     def __init__(self, environ):
-        home_path = environ["HOME"]
+        home_path = Path(environ["HOME"])
         # per xdg spec:
         # https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html
-        config_home = environ.get("XDG_CONFIG_HOME", path.join(home_path, ".config"))
-        data_home = environ.get("XDG_DATA_HOME", path.join(home_path, ".local/share"))
-        cache_home = environ.get("XDG_CACHE_HOME", path.join(home_path, ".cache"))
-        self.cache_directory = path.join(cache_home, "slipway")
-        self.config_path = path.join(config_home, "slipway.yaml")
-        self.data_directory = path.join(data_home, "slipway")
-        self.runtime_dir = environ.get(
-            "XDG_RUNTIME_DIR", path.join("/run/user", str(os.getuid()))
+        config_home = Path(environ.get("XDG_CONFIG_HOME", str(home_path / ".config")))
+        data_home = Path(
+            environ.get("XDG_DATA_HOME", str(home_path / ".local/share"))
+            if sys.platform == "linux"
+            else home_path / "Library" / "Application Support"
         )
-        self.workspace = path.join(home_path, "workspace")
+        cache_home = Path(
+            environ.get("XDG_CACHE_HOME", str(home_path / ".cache"))
+            if sys.platform == "linux"
+            else str(home_path / "Library" / "Caches")
+        )
+        self.cache_directory = str(cache_home / "slipway")
+        self.config_path = config_home / "slipway.yaml"
+        self.data_directory = str(data_home / "slipway")
+        self.runtime_dir = (
+            environ.get("XDG_RUNTIME_DIR", str(Path("/run/user") / str(os.getuid())))
+            if sys.platform == "linux"
+            else str(data_home)
+        )
+        self.workspace = str(home_path / "workspace")
         self.alias = {}
         self.environment = []
         self.volume = []
@@ -30,10 +41,10 @@ class Configuration(object):
 
     @property
     def log_directory(self) -> str:
-        return path.join(self.data_directory, "logs")
+        return str(Path(self.data_directory) / "logs")
 
     def load(self):
-        if path.exists(self.config_path):
+        if self.config_path.exists():
             with open(self.config_path) as file_descriptor:
                 config = yaml.safe_load(file_descriptor)
 
