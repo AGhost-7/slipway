@@ -38,6 +38,7 @@ class Configuration(object):
         self.runtime = "podman"
         self.network = "host"
         self.device = []
+        self.proxy_commands = ["xdg-open"] if sys.platform == "linux" else ["xdg-open", "xclip"]
 
     @property
     def log_directory(self) -> str:

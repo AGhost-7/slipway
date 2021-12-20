@@ -39,6 +39,7 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     command_proxy.add_argument("--runtime-dir", default=configuration.runtime_dir)
     command_proxy_subparser = command_proxy.add_subparsers(dest="command")
     proxy_start = command_proxy_subparser.add_parser("start")
+    proxy_start.add_argument("commands", nargs=-1, default=configuration.proxy_commands)
     proxy_stop = command_proxy_subparser.add_parser("stop")
     proxy_logs = command_proxy_subparser.add_parser("logs")
     return parser

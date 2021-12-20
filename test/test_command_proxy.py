@@ -1,6 +1,7 @@
+import signal
 import json
 import shutil
-from subprocess import run
+from subprocess import run, Popen, PIPE
 from slipway.command_proxy import CommandProxy
 from pytest import fixture
 from os import environ, path
@@ -9,18 +10,18 @@ import sys
 import time
 from .util import create_client
 from pathlib import Path
+from contextlib import contextmanager
 
 
-@fixture
-def command_proxy(tmp_path: Path):
+@contextmanager
+def start_command_proxy(tmp_path: Path, script_name, script_content):
     logs_directory = tmp_path / "logs"
-    command_proxy = CommandProxy(tmp_path, logs_directory)
+    command_proxy = CommandProxy(tmp_path, logs_directory, [script_name])
 
-    fake_cli = tmp_path / "xdg-open"
+    fake_cli = tmp_path / script_name
     with open(fake_cli, "w+") as file:
         file.write(
-            "#!/bin/sh\n"
-            f"echo $@ > {tmp_path}/args.txt; echo $PWD > {tmp_path}/pwd.txt"
+            f"#!/bin/sh\n{script_content}"
         )
     os.chmod(fake_cli, 0o700)
 
@@ -28,51 +29,41 @@ def command_proxy(tmp_path: Path):
     sub_env["PATH"] = f"{str(tmp_path)}:{sub_env['PATH']}"
     command_proxy.start_server(env=sub_env)
 
+    proxy_bin = tmp_path / "proxy"
+    proxy_bin.mkdir()
+    proxy = proxy_bin / script_name
+    proxy.symlink_to(command_proxy.client_path)
+
+    # server takes a bit of time to start up...
+    time.sleep(1)
+    assert command_proxy.is_server_running()
+
     yield command_proxy
     if command_proxy.is_server_running():
         command_proxy.stop_server()
         pass
 
 
-def test_start_server(command_proxy: CommandProxy):
-    command_proxy.start_server()
-    assert command_proxy.is_server_running()
+
+def test_proxy_args(tmp_path: Path):
+    with start_command_proxy(tmp_path, "xdg-open", f"echo $@ > {tmp_path}/args.txt") as command_proxy:
+
+        result = run(
+            [tmp_path / "proxy" / "xdg-open", "https://jokes.jonathan-boudreau.com"],
+            env={
+                **environ,
+                "SLIPWAY_COMMAND_PROXY_URL": f"unix://{tmp_path}/slipway/command-proxy.sock",
+            },
+        )
+
+        assert result.returncode == 0
+
+        with open(tmp_path / "args.txt") as file:
+            content = file.read()
+            assert content.strip() == "https://jokes.jonathan-boudreau.com"
 
 
-def test_server_calls_command_proxy(tmp_path: Path, command_proxy: CommandProxy):
-    proxy_bin = tmp_path / "proxy"
-    proxy_bin.mkdir()
-    xdg_proxy = proxy_bin / "xdg-open"
-    xdg_proxy.symlink_to(command_proxy.client_path)
-
-    # server takes a bit of time to start up...
-    time.sleep(1)
-    assert command_proxy.is_server_running()
-
-    result = run(
-        [xdg_proxy, "https://jokes.jonathan-boudreau.com"],
-        env={
-            **environ,
-            "SLIPWAY_COMMAND_PROXY_URL": f"unix://{tmp_path}/slipway/command-proxy.sock",
-        },
-    )
-
-    assert result.returncode == 0
-
-    with open(tmp_path / "args.txt") as file:
-        content = file.read()
-        assert content.strip() == "https://jokes.jonathan-boudreau.com"
-
-
-def test_xdg_mapping(tmp_path: Path, command_proxy: CommandProxy, image_fixture: str):
-    proxy_bin = tmp_path / "proxy"
-    proxy_bin.mkdir()
-    xdg_proxy = proxy_bin / "xdg-open"
-    xdg_proxy.symlink_to(command_proxy.client_path)
-
-    assert command_proxy.is_server_running()
-    time.sleep(1)
-
+def test_workdir_mapping(tmp_path: Path, image_fixture: str):
     client = create_client()
     mapping_file = tmp_path / "slipway-mapping.json"
     with open(mapping_file, "w") as file:
@@ -83,30 +74,92 @@ def test_xdg_mapping(tmp_path: Path, command_proxy: CommandProxy, image_fixture:
                 ]
             )
         )
-    result = run(
-        [
-            client.runtime,
-            "run",
-            "-ti",
-            "--rm",
-            "-v",
-            f"{command_proxy.client_path}:/usr/bin/xdg-open",
-            "-v",
-            f"{tmp_path / 'slipway'}:/run/slipway",
-            "-e",
-            f"SLIPWAY_COMMAND_PROXY_URL={command_proxy.server_url}",
-            "-v",
-            f"{os.getcwd()}:/workspace",
-            "-v" f"{mapping_file}:/run/user/1000/slipway-mapping.json",
-            "python:3",
-            "bash",
-            "-c",
-            "cd /workspace && xdg-open ./README.md",
-        ]
-    )
+    with start_command_proxy(tmp_path, "xdg-open", f"echo $PWD > {tmp_path}/pwd.txt") as command_proxy:
+        result = run(
+            [
+                client.runtime,
+                "run",
+                "-ti",
+                "--rm",
+                "-v",
+                f"{command_proxy.client_path}:/usr/bin/xdg-open",
+                "-v",
+                f"{tmp_path / 'slipway'}:/run/slipway",
+                "-e",
+                f"SLIPWAY_COMMAND_PROXY_URL={command_proxy.server_url}",
+                "-v",
+                f"{os.getcwd()}:/workspace",
+                "-v" f"{mapping_file}:/run/user/1000/slipway-mapping.json",
+                "python:3",
+                "bash",
+                "-c",
+                "cd /workspace && xdg-open ./README.md",
+            ]
+        )
     assert result.returncode == 0
-    with open(tmp_path / "args.txt") as file:
-        content = file.read()
-        assert content.strip() == "./README.md"
     with open(tmp_path / "pwd.txt") as file:
         assert file.read().strip() == os.getcwd()
+
+
+def test_signals(tmp_path):
+    with start_command_proxy(tmp_path, "docker-compose", f"trap 'echo 1 > {tmp_path}/sig_int' INT; sleep 1d") as command_proxy:
+        proxy_url = f"unix://{tmp_path}/slipway/command-proxy.sock"
+        print('proxy_url', proxy_url)
+        process = Popen(
+            [tmp_path / "proxy" / "docker-compose"],
+            env={
+                **environ,
+                "SLIPWAY_COMMAND_PROXY_URL": proxy_url,
+            },
+            stdout=PIPE,
+            stderr=PIPE
+        )
+        print('signal.SIGINT', signal.SIGINT.value)
+        #process.send_signal(signal.SIGINT.value)
+        os.kill(process.pid, signal.SIGINT.value)
+        process.wait(10)
+        print('returncode', process.returncode)
+        print('stdout', process.stdout.read())
+        print('stderr', process.stderr.read())
+        with open(tmp_path / "sig_int") as file:
+            assert file.read() == '1'
+
+
+def test_stdio(tmp_path: Path):
+    #logs_directory = tmp_path / "logs"
+    #command_proxy = CommandProxy(tmp_path, logs_directory, ["echo-cli"])
+
+    #fake_cli = tmp_path / "echo-cli"
+    #with open(fake_cli, "w+") as file:
+    #    file.write(
+    #        "#!/bin/sh\n"
+    #        "cat -"
+    #    )
+    #os.chmod(fake_cli, 0o700)
+
+    #sub_env = environ.copy()
+    #sub_env["PATH"] = f"{str(tmp_path)}:{sub_env['PATH']}"
+    #command_proxy.start_server(env=sub_env)
+
+    #proxy_bin = tmp_path / "proxy"
+    #proxy_bin.mkdir()
+    #echo_proxy = proxy_bin / "echo-cli"
+    #echo_proxy.symlink_to(command_proxy.client_path)
+
+    with start_command_proxy(tmp_path, "echo-cli", "cat -") as command_proxy:
+        process = Popen(
+            [tmp_path / "proxy" / "echo-cli"],
+            env={
+                **environ,
+                "SLIPWAY_COMMAND_PROXY_URL": f"unix://{tmp_path}/slipway/command-proxy.sock",
+            },
+            stdin=PIPE,
+            stdout=PIPE,
+        )
+        assert process.stdin is not None
+        process.stdin.write(b"foobar")
+        time.sleep(10)
+        #process.wait(10)
+        #process.stdin.close()
+        print('stdout', process.stdout.read())
+        print('returncode', process.returncode)
