@@ -56,19 +56,21 @@ class CommandProxy(object):
             else "tcp://127.0.0.1:7272"
         )
         args = ["python3", server_script, bind_url] + self._commands
-        print('starting with', args)
+        print("starting with", args)
 
         process = Popen(
             args,
             stdin=DEVNULL,
             stdout=log_file,
             stderr=log_file,
-            **({
-                # Makes the subprocess its own parent, prevents the process
-                # from becoming defunct once it exits.
-                "preexec_fn": os.setsid,
-                **child_process_kwargs,
-            })
+            **(
+                {
+                    # Makes the subprocess its own parent, prevents the process
+                    # from becoming defunct once it exits.
+                    "preexec_fn": os.setsid,
+                    **child_process_kwargs,
+                }
+            ),
         )
         with open(self._pid_file, "w+") as file:
             file.write(str(process.pid))
@@ -77,9 +79,9 @@ class CommandProxy(object):
         self._pid_file.parent.mkdir(parents=True, exist_ok=True)
 
         if self._pid_file.exists():
-            print('pid exists')
+            print("pid exists")
             if not self.is_server_running():
-                print('server not running')
+                print("server not running")
                 self._remove_file(self._pid_file)
                 self._remove_file(self._socket_file)
                 self._start_background_process(kwargs)

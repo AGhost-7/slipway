@@ -25,7 +25,8 @@ MESSAGE_STDERR = 4
 MESSAGE_EXIT = 5
 MESSAGE_SIGNAL = 6
 
-def encode(message_type:int , body: bytes) -> bytes:
+
+def encode(message_type: int, body: bytes) -> bytes:
     """
     Encodes the the data into a frame. The header is a fixed size of 3 bytes,
     where the first byte determines the type of frame. The next two bytes
@@ -35,7 +36,7 @@ def encode(message_type:int , body: bytes) -> bytes:
     assert size < 65536, "Message encoding failed due to out of bounds"
     size_bytes = size.to_bytes(2, byteorder="big", signed=False)
     type_bytes = message_type.to_bytes(1, byteorder="big", signed=False)
-    message = b''.join([type_bytes, size_bytes, body])
+    message = b"".join([type_bytes, size_bytes, body])
     return message
 
 
@@ -45,9 +46,7 @@ def request_cwd(request: Dict[str, Any]) -> Optional[str]:
     """
     cwd = request["cwd"]
     if cwd is not None and not Path(cwd).exists():
-        print(
-            f"The path {cwd} does not exist on the host, ignoring", file=sys.stdout
-        )
+        print(f"The path {cwd} does not exist on the host, ignoring", file=sys.stdout)
         cwd = None
     return cwd
 
@@ -121,30 +120,57 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
         cwd = request_cwd(request)
         args = request["args"]
         if command not in allowed_commands:
-            writer.write(encode(MESSAGE_STDERR, bytes(f"Command {command} is not permitted to run on the host\n", "utf8")))
-            writer.write(encode(MESSAGE_EXIT, (1).to_bytes(1, byteorder="big", signed=False)))
+            writer.write(
+                encode(
+                    MESSAGE_STDERR,
+                    bytes(
+                        f"Command {command} is not permitted to run on the host\n",
+                        "utf8",
+                    ),
+                )
+            )
+            writer.write(
+                encode(MESSAGE_EXIT, (1).to_bytes(1, byteorder="big", signed=False))
+            )
         else:
             if sys.platform == "darwin":
                 (command, args) = translate_darwin_call(command, args)
 
             process = await asyncio.create_subprocess_exec(
-                command, *args, cwd=cwd,
+                command,
+                *args,
+                cwd=cwd,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                )
-            assert process.stdin is not None and process.stdout is not None and process.stderr is not None
+            )
+            assert (
+                process.stdin is not None
+                and process.stdout is not None
+                and process.stderr is not None
+            )
 
-            client_task = asyncio.create_task(poll_client(reader, process, process.stdin))
-            stdout_task = asyncio.create_task(poll_pipe(writer, MESSAGE_STDOUT, process.stdout))
-            stderr_task = asyncio.create_task(poll_pipe(writer, MESSAGE_STDERR, process.stderr))
+            client_task = asyncio.create_task(
+                poll_client(reader, process, process.stdin)
+            )
+            stdout_task = asyncio.create_task(
+                poll_pipe(writer, MESSAGE_STDOUT, process.stdout)
+            )
+            stderr_task = asyncio.create_task(
+                poll_pipe(writer, MESSAGE_STDERR, process.stderr)
+            )
 
             await process.wait()
             assert process.returncode is not None
             client_task.cancel()
             stdout_task.cancel()
             stderr_task.cancel()
-            writer.write(encode(MESSAGE_EXIT, process.returncode.to_bytes(1, byteorder="big", signed=False)))
+            writer.write(
+                encode(
+                    MESSAGE_EXIT,
+                    process.returncode.to_bytes(1, byteorder="big", signed=False),
+                )
+            )
 
 
 async def main():
@@ -158,7 +184,7 @@ async def main():
     else:
         [host, port] = url.netloc.split(":")
         server = await asyncio.start_server(client_connected, host, port)
-    print('Listening on addresss', sys.argv[1])
+    print("Listening on addresss", sys.argv[1])
     async with server:
         await server.serve_forever()
 

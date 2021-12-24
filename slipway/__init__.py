@@ -45,7 +45,7 @@ def main():
             container.image.initialize()
             container.volumes.initialize()
             container.binds.initialize()
-            #container.command_proxy.start_server()
+            container.command_proxy.start_server()
             if container.exists():
                 print("Container {} already exists".format(container.name))
                 sys.exit(1)

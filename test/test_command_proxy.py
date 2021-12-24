@@ -20,9 +20,7 @@ def start_command_proxy(tmp_path: Path, script_name, script_content):
 
     fake_cli = tmp_path / script_name
     with open(fake_cli, "w+") as file:
-        file.write(
-            f"#!/bin/sh\n{script_content}"
-        )
+        file.write(f"#!/bin/sh\n{script_content}")
     os.chmod(fake_cli, 0o700)
 
     sub_env = environ.copy()
@@ -44,9 +42,10 @@ def start_command_proxy(tmp_path: Path, script_name, script_content):
         pass
 
 
-
 def test_proxy_args(tmp_path: Path):
-    with start_command_proxy(tmp_path, "xdg-open", f"echo $@ > {tmp_path}/args.txt") as command_proxy:
+    with start_command_proxy(
+        tmp_path, "xdg-open", f"echo $@ > {tmp_path}/args.txt"
+    ) as command_proxy:
 
         result = run(
             [tmp_path / "proxy" / "xdg-open", "https://jokes.jonathan-boudreau.com"],
@@ -74,7 +73,9 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
                 ]
             )
         )
-    with start_command_proxy(tmp_path, "xdg-open", f"echo $PWD > {tmp_path}/pwd.txt") as command_proxy:
+    with start_command_proxy(
+        tmp_path, "xdg-open", f"echo $PWD > {tmp_path}/pwd.txt"
+    ) as command_proxy:
         result = run(
             [
                 client.runtime,
@@ -102,9 +103,11 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
 
 
 def test_signals(tmp_path):
-    with start_command_proxy(tmp_path, "docker-compose", f"trap 'echo 1 > {tmp_path}/sig_int' INT; sleep 1d") as command_proxy:
+    with start_command_proxy(
+        tmp_path, "docker-compose", f"trap 'echo 1 > {tmp_path}/sig_int' INT; sleep 1d"
+    ) as command_proxy:
         proxy_url = f"unix://{tmp_path}/slipway/command-proxy.sock"
-        print('proxy_url', proxy_url)
+        print("proxy_url", proxy_url)
         process = Popen(
             [tmp_path / "proxy" / "docker-compose"],
             env={
@@ -112,39 +115,39 @@ def test_signals(tmp_path):
                 "SLIPWAY_COMMAND_PROXY_URL": proxy_url,
             },
             stdout=PIPE,
-            stderr=PIPE
+            stderr=PIPE,
         )
-        print('signal.SIGINT', signal.SIGINT.value)
-        #process.send_signal(signal.SIGINT.value)
+        print("signal.SIGINT", signal.SIGINT.value)
+        # process.send_signal(signal.SIGINT.value)
         os.kill(process.pid, signal.SIGINT.value)
         process.wait(10)
-        print('returncode', process.returncode)
-        print('stdout', process.stdout.read())
-        print('stderr', process.stderr.read())
+        print("returncode", process.returncode)
+        print("stdout", process.stdout.read())
+        print("stderr", process.stderr.read())
         with open(tmp_path / "sig_int") as file:
-            assert file.read() == '1'
+            assert file.read() == "1"
 
 
 def test_stdio(tmp_path: Path):
-    #logs_directory = tmp_path / "logs"
-    #command_proxy = CommandProxy(tmp_path, logs_directory, ["echo-cli"])
+    # logs_directory = tmp_path / "logs"
+    # command_proxy = CommandProxy(tmp_path, logs_directory, ["echo-cli"])
 
-    #fake_cli = tmp_path / "echo-cli"
-    #with open(fake_cli, "w+") as file:
+    # fake_cli = tmp_path / "echo-cli"
+    # with open(fake_cli, "w+") as file:
     #    file.write(
     #        "#!/bin/sh\n"
     #        "cat -"
     #    )
-    #os.chmod(fake_cli, 0o700)
+    # os.chmod(fake_cli, 0o700)
 
-    #sub_env = environ.copy()
-    #sub_env["PATH"] = f"{str(tmp_path)}:{sub_env['PATH']}"
-    #command_proxy.start_server(env=sub_env)
+    # sub_env = environ.copy()
+    # sub_env["PATH"] = f"{str(tmp_path)}:{sub_env['PATH']}"
+    # command_proxy.start_server(env=sub_env)
 
-    #proxy_bin = tmp_path / "proxy"
-    #proxy_bin.mkdir()
-    #echo_proxy = proxy_bin / "echo-cli"
-    #echo_proxy.symlink_to(command_proxy.client_path)
+    # proxy_bin = tmp_path / "proxy"
+    # proxy_bin.mkdir()
+    # echo_proxy = proxy_bin / "echo-cli"
+    # echo_proxy.symlink_to(command_proxy.client_path)
 
     with start_command_proxy(tmp_path, "echo-cli", "cat -") as command_proxy:
         process = Popen(
@@ -159,7 +162,7 @@ def test_stdio(tmp_path: Path):
         assert process.stdin is not None
         process.stdin.write(b"foobar")
         time.sleep(10)
-        #process.wait(10)
-        #process.stdin.close()
-        print('stdout', process.stdout.read())
-        print('returncode', process.returncode)
+        # process.wait(10)
+        # process.stdin.close()
+        # print("stdout", process.stdout.read())
+        print("returncode", process.returncode)

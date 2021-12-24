@@ -40,7 +40,7 @@ MESSAGE_EXIT = 5
 MESSAGE_SIGNAL = 6
 
 
-def encode(message_type:int , body: bytes) -> bytes:
+def encode(message_type: int, body: bytes) -> bytes:
     """
     Encodes the the data into a frame. The header is a fixed size of 3 bytes,
     where the first byte determines the type of frame. The next two bytes
@@ -50,7 +50,7 @@ def encode(message_type:int , body: bytes) -> bytes:
     assert size < 65536, "Message encoding failed due to out of bounds"
     size_bytes = size.to_bytes(2, byteorder="big", signed=False)
     type_bytes = message_type.to_bytes(1, byteorder="big", signed=False)
-    message = b''.join([type_bytes, size_bytes, body])
+    message = b"".join([type_bytes, size_bytes, body])
     return message
 
 
@@ -66,7 +66,7 @@ async def poll_stdin(server_writer: StreamWriter):
             chunk = await loop.run_in_executor(None, file.read, 1024)
             if len(chunk) == 0:
                 eof = True
-            server_writer.write(encode(MESSAGE_STDIN, chunk)) # type: ignore
+            server_writer.write(encode(MESSAGE_STDIN, chunk))  # type: ignore
     finally:
         if file is not None:
             file.close()
@@ -116,15 +116,20 @@ async def main():
     writer.write(encode(MESSAGE_INIT, bytes(payload, "utf8")))
 
     def handler(signal_number: int, frame):
-        print('sending signal')
-        writer.write(encode(MESSAGE_SIGNAL, signal_number.to_bytes(4, byteorder="big", signed=False)))
+        print("sending signal")
+        writer.write(
+            encode(
+                MESSAGE_SIGNAL, signal_number.to_bytes(4, byteorder="big", signed=False)
+            )
+        )
+
     signal.signal(signal.SIGHUP, handler)
     signal.signal(signal.SIGINT, handler)
 
     stdin_task = asyncio.create_task(poll_stdin(writer))
     exit_code = await poll_replies(reader)
     stdin_task.cancel()
-    os._exit(exit_code) # TODO: why is it not exiting cleanly?
+    os._exit(exit_code)  # TODO: why is it not exiting cleanly?
 
 
 asyncio.run(main())
