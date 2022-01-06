@@ -35,7 +35,7 @@ class Configuration(object):
         self.pull = False
         self.pull_daily = False
         self.mount_docker = False
-        self.runtime = "podman"
+        self.runtime = "podman" if sys.platform == "linux" else "docker"
         self.network = "host"
         self.device = []
         self.proxy_commands = (
