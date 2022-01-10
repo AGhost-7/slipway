@@ -132,4 +132,5 @@ async def main():
     os._exit(exit_code)  # TODO: why is it not exiting cleanly?
 
 
-asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())

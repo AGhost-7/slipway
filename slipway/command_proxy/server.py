@@ -135,7 +135,6 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
         else:
             if sys.platform == "darwin":
                 (command, args) = translate_darwin_call(command, args)
-
             process = await asyncio.create_subprocess_exec(
                 command,
                 *args,
@@ -189,5 +188,6 @@ async def main():
         await server.serve_forever()
 
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(main())
+if __name__ == "__main__":
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())

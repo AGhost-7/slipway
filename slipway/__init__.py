@@ -18,7 +18,9 @@ def main():
     args = parse_args(configuration)
 
     if args.mode == "command-proxy":
-        command_proxy = CommandProxy(args.runtime_dir, args.log_directory)
+        command_proxy = CommandProxy(
+            args.runtime_dir, args.log_directory, getattr(args, "commands", [])
+        )
         if args.command == "start":
             command_proxy.start_server()
         elif args.command == "stop":

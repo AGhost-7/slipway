@@ -1,3 +1,4 @@
+from shutil import which
 import json
 from pathlib import Path
 import os
@@ -13,7 +14,9 @@ class Container(object):
     def __init__(self, client, args):
         self.client = client
         self.args = args
-        self.command_proxy = CommandProxy(args.runtime_dir, args.log_directory)
+        self.command_proxy = CommandProxy(
+            args.runtime_dir, args.log_directory, args.proxy_commands
+        )
         self.image = Image(self.client, self.args)
         self.volumes = Volumes(self.client, self.args, self.image)
         self.binds = Binds(self.client, self.args, self.image)
@@ -95,11 +98,16 @@ class Container(object):
         arguments.extend(
             [
                 "-v",
-                "{}:/usr/bin/xdg-open".format(self.command_proxy.client_path),
-                "-v",
                 "{}/slipway:/run/slipway".format(self.args.runtime_dir),
             ]
         )
+        for command in self.args.proxy_commands:
+            arguments.extend(
+                [
+                    "-v",
+                    f"{self.command_proxy.client_path}:/usr/bin/{command}",
+                ]
+            )
 
         if self.args.mount_docker:
             arguments.append("-v")

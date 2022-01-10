@@ -1,3 +1,5 @@
+from typing import List
+from shutil import which
 import yaml
 import os
 from pathlib import Path
@@ -38,9 +40,18 @@ class Configuration(object):
         self.runtime = "podman" if sys.platform == "linux" else "docker"
         self.network = "host"
         self.device = []
-        self.proxy_commands = (
-            ["xdg-open"] if sys.platform == "linux" else ["xdg-open", "xclip"]
-        )
+
+    @property
+    def proxy_commands(self) -> List[str]:
+        commands = [
+            command
+            for command in ["docker", "podman", "docker-compose"]
+            if which(command) is not None
+        ]
+        commands.append("xdg-open")
+        if sys.platform == "darwin":
+            commands.append("xclip")
+        return commands
 
     @property
     def log_directory(self) -> str:

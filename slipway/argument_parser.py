@@ -27,6 +27,12 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     start_parser.add_argument(
         "--environment", "-e", action="append", default=configuration.environment
     )
+    start_parser.add_argument(
+        "--proxy-command",
+        dest="proxy_commands",
+        action="append",
+        default=configuration.proxy_commands,
+    )
     start_parser.add_argument("--runtime", "-r", default=configuration.runtime)
     start_parser.add_argument("--workspace", default=configuration.workspace)
     start_parser.add_argument("--network", default=configuration.network)
@@ -39,7 +45,9 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     command_proxy.add_argument("--runtime-dir", default=configuration.runtime_dir)
     command_proxy_subparser = command_proxy.add_subparsers(dest="command")
     proxy_start = command_proxy_subparser.add_parser("start")
-    proxy_start.add_argument("commands", nargs=-1, default=configuration.proxy_commands)
+    proxy_start.add_argument(
+        "commands", nargs="*", default=configuration.proxy_commands
+    )
     proxy_stop = command_proxy_subparser.add_parser("stop")
     proxy_logs = command_proxy_subparser.add_parser("logs")
     return parser
