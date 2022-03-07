@@ -37,6 +37,7 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     start_parser.add_argument("--workspace", default=configuration.workspace)
     start_parser.add_argument("--network", default=configuration.network)
     start_parser.add_argument("--runtime-dir", default=configuration.runtime_dir)
+    start_parser.add_argument("--shm-size", default=configuration.shm_size)
 
     purge_parser = subparsers.add_parser("purge")
     purge_parser.add_argument("image")

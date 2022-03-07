@@ -40,6 +40,7 @@ class Configuration(object):
         self.runtime = "podman" if sys.platform == "linux" else "docker"
         self.network = "host"
         self.device = []
+        self.shm_size = None
 
     @property
     def proxy_commands(self) -> List[str]:
@@ -80,3 +81,5 @@ class Configuration(object):
                     self.mount_docker = config["mount_docker"]
                 if "runtime" in config:
                     self.runtime = config["runtime"]
+                if "shm_size" in config:
+                    self.shm_size = config["shm_size"]

@@ -15,6 +15,11 @@ from asyncio import StreamWriter, StreamReader
 import stat
 
 
+output = open('/tmp/proxy-command.log', 'w+')
+
+def debug(*args):
+    print(*args, file=output)
+
 def host_cwd() -> Optional[str]:
     cwd = os.getcwd()
     mapping_path = Path("/run/user") / str(os.getuid()) / "slipway-mapping.json"
@@ -79,20 +84,26 @@ async def poll_replies(server_reader: StreamReader):
     while True:
         header = await server_reader.read(3)
         if len(header) < 3:
+            debug('connection closed')
             print("Connection to proxy server closed", file=sys.stderr)
             return 1
         message_type = int.from_bytes(header[0:1], "big", signed=False)
         size = int.from_bytes(header[1:3], "big", signed=False)
+        debug('got header, waiting for body')
         body = await server_reader.read(size)
         if len(body) < size:
+            debug('connection closed')
             print("Connection to proxy server closed", file=sys.stderr)
             return 1
 
         if message_type == MESSAGE_STDOUT:
+            debug('got stdout message', body)
             sys.stdout.write(str(body, "utf8"))
         elif message_type == MESSAGE_STDERR:
+            debug('got stderr message', body)
             sys.stderr.write(str(body, "utf8"))
         elif message_type == MESSAGE_EXIT:
+            debug('got exit message', body)
             return int.from_bytes(body, "big", signed=False)
 
 
@@ -129,6 +140,7 @@ async def main():
     stdin_task = asyncio.create_task(poll_stdin(writer))
     exit_code = await poll_replies(reader)
     stdin_task.cancel()
+    output.flush()
     os._exit(exit_code)  # TODO: why is it not exiting cleanly?
 
 

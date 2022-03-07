@@ -92,6 +92,9 @@ class Container(object):
         )
         arguments.append("--network={}".format(self.args.network))
 
+        if self.args.shm_size is not None:
+            arguments.append(f"--shm-size={self.args.shm_size}")
+
         if self.client.has_uidmap():
             self._append_id_mappings(arguments)
 

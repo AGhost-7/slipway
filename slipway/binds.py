@@ -60,6 +60,7 @@ class Binds(object):
             ("f", ".yarnrc"),
             ("f", ".cargo/credentials"),
             ("f", ".pypirc"),
+            ("f", ".m2/settings.xml"),
         ]
         for type, mapping in home_mappings:
             host_path = path.join(environ["HOME"], mapping)
