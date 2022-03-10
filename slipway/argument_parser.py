@@ -76,4 +76,6 @@ def parse_args(configuration: Configuration, raw_args: List[str] = None):
 
         if "device" in alias:
             args.device.extend(alias["device"])
+        if "shm_size" in alias:
+            args.shm_size = alias["shm_size"]
     return args

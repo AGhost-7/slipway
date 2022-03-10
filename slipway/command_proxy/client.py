@@ -122,6 +122,7 @@ async def main():
             "args": args,
             "command": command,
             "cwd": host_cwd(),
+            "tty": os.isatty(sys.stdout.fileno()),
         }
     )
     writer.write(encode(MESSAGE_INIT, bytes(payload, "utf8")))
