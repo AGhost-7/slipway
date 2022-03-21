@@ -1,4 +1,4 @@
-from subprocess import Popen, DEVNULL, PIPE
+from subprocess import Popen, DEVNULL, PIPE, check_output
 import os
 from os import path
 from pathlib import Path
@@ -14,19 +14,27 @@ class CommandProxy(object):
         self._commands = commands
 
     @property
-    def client_path(self):
+    def client_path(self) -> Path:
         return self._script_dir / "client.py"
 
     @property
-    def server_url(self):
+    def server_url(self) -> Path:
         if sys.platform == "linux":
             return "unix:///run/slipway/command-proxy.sock"
         else:
             return "tcp://host.docker.internal:7272"
 
+    @property
+    def server_script(self) -> Path:
+        return self._script_dir / "server.py"
+
     def _kill(self, code):
-        with open(self._pid_file) as file:
-            pid = str(file.read())
+        with open(self._pid_file) as pid_file:
+            pid = str(pid_file.read())
+            # If there is a system restart, the pids will reset to 0 and start
+            # incrementing again. Handle that by checking the command name.
+            process_command = str(check_output(["ps", "-p", pid, "-o", "comm="]), "utf8")
+            assert process_command == str(self.server_script), "Stored pid does not point to command-proxy server"
             os.kill(int(pid), code)
 
     def is_server_running(self):
@@ -36,6 +44,8 @@ class CommandProxy(object):
             # https://linux.die.net/man/2/kill
             self._kill(0)
             return True
+        except AssertionError:
+            return False
         except OSError:
             return False
 
@@ -46,7 +56,6 @@ class CommandProxy(object):
             pass
 
     def _start_background_process(self, child_process_kwargs):
-        server_script = self._script_dir / "server.py"
         self._log_file.parent.mkdir(parents=True, exist_ok=True)
         self._log_file.touch(exist_ok=True)
         log_file = open(self._log_file)
@@ -55,7 +64,7 @@ class CommandProxy(object):
             if sys.platform == "linux"
             else "tcp://127.0.0.1:7272"
         )
-        args = ["python3", server_script, bind_url] + self._commands
+        args = ["python3", self.server_script, bind_url] + self._commands
         print("starting with", args)
 
         process = Popen(
