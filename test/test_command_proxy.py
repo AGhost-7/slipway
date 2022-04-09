@@ -36,10 +36,11 @@ def start_command_proxy(tmp_path: Path, script_name, script_content):
     time.sleep(1)
     assert command_proxy.is_server_running()
 
-    yield command_proxy
-    if command_proxy.is_server_running():
-        command_proxy.stop_server()
-        pass
+    try:
+        yield command_proxy
+    finally:
+        if command_proxy.is_server_running():
+            command_proxy.stop_server()
 
 
 def test_proxy_args(tmp_path: Path):
@@ -125,7 +126,7 @@ def test_signals(tmp_path):
         print("stdout", process.stdout.read())
         print("stderr", process.stderr.read())
         with open(tmp_path / "sig_int") as file:
-            assert file.read() == "1"
+            assert file.read().strip() == "1"
 
 
 def test_stdio(tmp_path: Path):

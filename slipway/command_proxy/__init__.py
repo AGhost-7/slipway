@@ -35,10 +35,10 @@ class CommandProxy(object):
             # If there is a system restart, the pids will reset to 0 and start
             # incrementing again. Handle that by checking the command name.
             process_command = str(
-                check_output(["ps", "-p", pid, "-o", "comm="]), "utf8"
+                check_output(["ps", "-p", pid, "-o", "args="]), "utf8"
             )
-            assert process_command == str(
-                self.server_script
+            assert (
+                str(self.server_script) in process_command
             ), "Stored pid does not point to command-proxy server"
 
     def is_server_running(self):
