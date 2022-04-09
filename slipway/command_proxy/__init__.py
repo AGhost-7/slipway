@@ -18,7 +18,7 @@ class CommandProxy(object):
         return self._script_dir / "client.py"
 
     @property
-    def server_url(self) -> Path:
+    def server_url(self) -> str:
         if sys.platform == "linux":
             return "unix:///run/slipway/command-proxy.sock"
         else:
@@ -31,11 +31,15 @@ class CommandProxy(object):
     def _kill(self, code):
         with open(self._pid_file) as pid_file:
             pid = str(pid_file.read())
+            os.kill(int(pid), code)
             # If there is a system restart, the pids will reset to 0 and start
             # incrementing again. Handle that by checking the command name.
-            process_command = str(check_output(["ps", "-p", pid, "-o", "comm="]), "utf8")
-            assert process_command == str(self.server_script), "Stored pid does not point to command-proxy server"
-            os.kill(int(pid), code)
+            process_command = str(
+                check_output(["ps", "-p", pid, "-o", "comm="]), "utf8"
+            )
+            assert process_command == str(
+                self.server_script
+            ), "Stored pid does not point to command-proxy server"
 
     def is_server_running(self):
         try:
