@@ -112,6 +112,7 @@ async def poll_replies(server_reader: StreamReader):
 async def main():
     args = sys.argv[1:]
     proxy_url = urlparse(environ["SLIPWAY_COMMAND_PROXY_URL"])
+    debug("sending", proxy_url)
     if proxy_url.scheme == "unix":
         reader, writer = await asyncio.open_unix_connection(proxy_url.path)
     else:
@@ -130,7 +131,6 @@ async def main():
     writer.write(encode(MESSAGE_INIT, bytes(payload, "utf8")))
 
     def handler(signal_number: int, frame):
-        print("sending signal", signal_number)
         writer.write(
             encode(
                 MESSAGE_SIGNAL, signal_number.to_bytes(4, byteorder="big", signed=False)

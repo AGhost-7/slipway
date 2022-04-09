@@ -174,7 +174,6 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
 
 async def main():
     assert url.scheme in ("unix", "tcp"), f"Invalid scheme {url.scheme}"
-
     if url.scheme == "unix":
         socket_file = Path(url.path)
         if socket_file.exists():

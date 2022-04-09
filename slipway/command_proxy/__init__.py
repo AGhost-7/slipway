@@ -25,31 +25,36 @@ class CommandProxy(object):
             return "tcp://host.docker.internal:7272"
 
     @property
+    def bind_url(self) -> str:
+        return (
+            f"unix://{self._socket_file}"
+            if sys.platform == "linux"
+            else "tcp://127.0.0.1:7272"
+        )
+
+    @property
     def server_script(self) -> Path:
         return self._script_dir / "server.py"
 
-    def _kill(self, code):
+    def _pid(self) -> int:
         with open(self._pid_file) as pid_file:
             pid = str(pid_file.read())
-            os.kill(int(pid), code)
-            # If there is a system restart, the pids will reset to 0 and start
-            # incrementing again. Handle that by checking the command name.
-            process_command = str(
-                check_output(["ps", "-p", pid, "-o", "args="]), "utf8"
-            )
-            assert (
-                str(self.server_script) in process_command
-            ), "Stored pid does not point to command-proxy server"
+            return int(pid)
 
     def is_server_running(self):
         try:
+            pid = self._pid()
             # per documentation, this will just check if the process is
             # running:
             # https://linux.die.net/man/2/kill
-            self._kill(0)
-            return True
-        except AssertionError:
-            return False
+            os.kill(pid, 0)
+
+            # If there is a system restart, the pids will reset to 0 and start
+            # incrementing again. Handle that by checking the command name.
+            process_command = str(
+                check_output(["ps", "-p", str(pid), "-o", "args="]), "utf8"
+            )
+            return str(self.server_script) in process_command
         except OSError:
             return False
 
@@ -63,12 +68,7 @@ class CommandProxy(object):
         self._log_file.parent.mkdir(parents=True, exist_ok=True)
         self._log_file.touch(exist_ok=True)
         log_file = open(self._log_file)
-        bind_url = (
-            f"unix://{self._socket_file}"
-            if sys.platform == "linux"
-            else "tcp://127.0.0.1:7272"
-        )
-        args = ["python3", self.server_script, bind_url] + self._commands
+        args = ["python3", self.server_script, self.bind_url] + self._commands
         print("starting with", args)
 
         process = Popen(
@@ -104,7 +104,7 @@ class CommandProxy(object):
 
     def stop_server(self):
         if self.is_server_running():
-            self._kill(15)  # SIGTERM
+            os.kill(self._pid(), 15)  # SIGTERM
         else:
             print("Server is not running")
 

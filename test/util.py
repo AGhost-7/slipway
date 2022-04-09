@@ -4,10 +4,13 @@ import docker
 from docker.errors import ImageNotFound, NotFound
 from os import path, environ
 from slipway.client import PodmanClient, DockerClient
+import sys
 
 
 def test_runtime():
-    return environ.get("TEST_RUNTIME", "podman")
+    return (
+        environ.get("TEST_RUNTIME", "podman") if sys.platform == "linux" else "docker"
+    )
 
 
 class TestDockerClient(DockerClient):

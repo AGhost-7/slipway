@@ -45,14 +45,17 @@ def start_command_proxy(tmp_path: Path, script_name, script_content):
 
 def test_proxy_args(tmp_path: Path):
     with start_command_proxy(
-        tmp_path, "xdg-open", f"echo $@ > {tmp_path}/args.txt"
+        tmp_path, "xdg-open-test", f"echo $@ > {tmp_path}/args.txt"
     ) as command_proxy:
 
         result = run(
-            [tmp_path / "proxy" / "xdg-open", "https://jokes.jonathan-boudreau.com"],
+            [
+                tmp_path / "proxy" / "xdg-open-test",
+                "https://jokes.jonathan-boudreau.com",
+            ],
             env={
                 **environ,
-                "SLIPWAY_COMMAND_PROXY_URL": f"unix://{tmp_path}/slipway/command-proxy.sock",
+                "SLIPWAY_COMMAND_PROXY_URL": command_proxy.bind_url,
             },
         )
 
@@ -75,7 +78,7 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
             )
         )
     with start_command_proxy(
-        tmp_path, "xdg-open", f"echo $PWD > {tmp_path}/pwd.txt"
+        tmp_path, "xdg-open-test", f"echo $PWD > {tmp_path}/pwd.txt"
     ) as command_proxy:
         result = run(
             [
@@ -84,7 +87,7 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
                 "-ti",
                 "--rm",
                 "-v",
-                f"{command_proxy.client_path}:/usr/bin/xdg-open",
+                f"{command_proxy.client_path}:/usr/bin/xdg-open-test",
                 "-v",
                 f"{tmp_path / 'slipway'}:/run/slipway",
                 "-e",
@@ -95,7 +98,7 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
                 "python:3",
                 "bash",
                 "-c",
-                "cd /workspace && xdg-open ./README.md",
+                "cd /workspace && xdg-open-test ./README.md",
             ]
         )
     assert result.returncode == 0
@@ -105,15 +108,16 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
 
 def test_signals(tmp_path):
     with start_command_proxy(
-        tmp_path, "docker-compose", f"trap 'echo 1 > {tmp_path}/sig_int' INT; sleep 1d"
+        tmp_path,
+        "docker-compose",
+        f"trap 'echo 1 > {tmp_path}/sig_int' INT; sleep 1000",
     ) as command_proxy:
-        proxy_url = f"unix://{tmp_path}/slipway/command-proxy.sock"
-        print("proxy_url", proxy_url)
+        print("proxy_url", command_proxy.bind_url)
         process = Popen(
             [tmp_path / "proxy" / "docker-compose"],
             env={
                 **environ,
-                "SLIPWAY_COMMAND_PROXY_URL": proxy_url,
+                "SLIPWAY_COMMAND_PROXY_URL": command_proxy.bind_url,
             },
             stdout=PIPE,
             stderr=PIPE,
