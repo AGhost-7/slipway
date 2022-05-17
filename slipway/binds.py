@@ -61,6 +61,7 @@ class Binds(object):
             ("f", ".cargo/credentials"),
             ("f", ".pypirc"),
             ("f", ".m2/settings.xml"),
+            ("f", ".kube/config"),
         ]
         for type, mapping in home_mappings:
             host_path = path.join(environ["HOME"], mapping)
