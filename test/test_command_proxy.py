@@ -20,7 +20,7 @@ def start_command_proxy(tmp_path: Path, script_name, script_content):
 
     fake_cli = tmp_path / script_name
     with open(fake_cli, "w+") as file:
-        file.write(f"#!/bin/sh\n{script_content}")
+        file.write(f"#!/usr/bin/env bash\n{script_content}")
     os.chmod(fake_cli, 0o700)
 
     sub_env = environ.copy()
@@ -107,29 +107,53 @@ def test_workdir_mapping(tmp_path: Path, image_fixture: str):
 
 
 def test_signals(tmp_path):
+
     with start_command_proxy(
         tmp_path,
         "docker-compose",
-        f"trap 'echo 1 > {tmp_path}/sig_int' INT; sleep 1000",
+        f"trap 'echo 1 > {tmp_path}/signal.txt' EXIT; sleep 1000",
     ) as command_proxy:
+        import subprocess
+        process = subprocess.Popen([tmp_path / "docker-compose"])
+        print('process', process.returncode)
+        #process.send_signal(15)
+        #process.send_signal(signal.SIGINT.value)
+        print('sigterm', signal.SIGTERM.value)
+        os.kill(process.pid, signal.SIGTERM.value)
+        process.communicate()
+        print('returncode', process.returncode, process.stdout)
+        #process.communicate()
+        #process.wait(1000)
+        #print('signal sent', process.returncode)
+        #with open(tmp_path / "sig_int") as file:
+        #    print('file', file.read())
+        #import asyncio
+        #async def send_signal_test():
+        #    print("creating process for", tmp_path)
+        #    process = await asyncio.create_subprocess_exec(tmp_path / "docker-compose", tmp_path / "docker-compose")
+        #    process.send_signal(signal.SIGINT.value)
+        #    await process.wait()
+
+        #loop = asyncio.get_event_loop()
+        #loop.run_until_complete(send_signal_test())
         print("proxy_url", command_proxy.bind_url)
-        process = Popen(
-            [tmp_path / "proxy" / "docker-compose"],
-            env={
-                **environ,
-                "SLIPWAY_COMMAND_PROXY_URL": command_proxy.bind_url,
-            },
-            stdout=PIPE,
-            stderr=PIPE,
-        )
-        print("signal.SIGINT", signal.SIGINT.value)
-        # process.send_signal(signal.SIGINT.value)
-        os.kill(process.pid, signal.SIGINT.value)
-        process.wait(10)
-        print("returncode", process.returncode)
-        print("stdout", process.stdout.read())
-        print("stderr", process.stderr.read())
-        with open(tmp_path / "sig_int") as file:
+        #process = Popen(
+        #    [tmp_path / "proxy" / "docker-compose"],
+        #    env={
+        #        **environ,
+        #        "SLIPWAY_COMMAND_PROXY_URL": command_proxy.bind_url,
+        #    },
+        #    stdout=PIPE,
+        #    stderr=PIPE,
+        #)
+        #print("signal.SIGINT", signal.SIGINT.value)
+        ## process.send_signal(signal.SIGINT.value)
+        #os.kill(process.pid, signal.SIGINT.value)
+        #process.wait(10)
+        #print("returncode", process.returncode)
+        #print("stdout", process.stdout.read())
+        #print("stderr", process.stderr.read())
+        with open(tmp_path / "signal.txt") as file:
             assert file.read().strip() == "1"
 
 

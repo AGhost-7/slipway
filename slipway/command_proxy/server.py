@@ -93,7 +93,8 @@ async def poll_client(reader: StreamReader, process: Process, stdin: StreamWrite
         elif message_type == MESSAGE_SIGNAL:
             signal = int.from_bytes(body, "big", signed=False)
             print("Got signal", signal)
-            process.send_signal(signal)
+            os.kill(process.pid, signal)
+            #process.send_signal(signal)
 
 
 async def poll_pipe(writer: StreamWriter, message_type: int, pipe: StreamReader):

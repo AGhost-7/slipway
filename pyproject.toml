@@ -9,7 +9,7 @@ license = "MIT"
 slipway = 'slipway:main'
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 docker = "^4.0.0"
 PyYAML = "^5.3"
 

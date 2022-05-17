@@ -10,8 +10,8 @@ from .argument_parser import parse_args
 
 
 def main():
-    if sys.version_info.major < 3:
-        print("Python 2 is not supported")
+    if sys.version_info.major < 3 or sys.version_info.minor < 8:
+        print("Python version 3.8 or higher is required")
         sys.exit(1)
     configuration = Configuration(environ)
     configuration.load()
