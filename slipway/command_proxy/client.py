@@ -14,6 +14,12 @@ import asyncio
 from asyncio import StreamWriter, StreamReader
 import stat
 
+try:
+    from .stream import create_standard_streams
+except (ModuleNotFoundError, ImportError):
+    sys.path.append('/usr/local/lib/slipway/slipway')
+    from command_proxy.stream import create_standard_streams
+
 
 output = open("/tmp/proxy-command.log", "w+")
 
@@ -25,6 +31,7 @@ def debug(*args):
 def host_cwd() -> Optional[str]:
     cwd = os.getcwd()
     mapping_path = Path("/run/user") / str(os.getuid()) / "slipway-mapping.json"
+    debug('host_cwd::mapping_path', mapping_path) 
     if not mapping_path.exists():
         return None
     with mapping_path.open() as file:
@@ -61,25 +68,19 @@ def encode(message_type: int, body: bytes) -> bytes:
     return message
 
 
-async def poll_stdin(server_writer: StreamWriter):
+async def poll_stdin(server_writer: StreamWriter, reader: StreamReader):
     """
     Forward stdin to server.
     """
-    loop = asyncio.get_event_loop()
-    try:
-        file = await loop.run_in_executor(None, open, 0, "rb")
-        eof = False
-        while not eof:
-            chunk = await loop.run_in_executor(None, file.read, 1024)
-            if len(chunk) == 0:
-                eof = True
-            server_writer.write(encode(MESSAGE_STDIN, chunk))  # type: ignore
-    finally:
-        if file is not None:
-            file.close()
+    eof = False
+    while not eof:
+        chunk = await reader.read(1024)
+        if len(chunk) == 0:
+            eof = True
+        server_writer.write(encode(MESSAGE_STDIN, chunk))
 
 
-async def poll_replies(server_reader: StreamReader):
+async def poll_replies(server_reader: StreamReader, stdout: StreamWriter, stderr: StreamWriter) -> int:
     """
     Checks for messages from the server and send to appropriate pipe or exit.
     """
@@ -100,10 +101,10 @@ async def poll_replies(server_reader: StreamReader):
 
         if message_type == MESSAGE_STDOUT:
             debug("got stdout message", body)
-            sys.stdout.write(str(body, "utf8"))
+            stdout.write(body)
         elif message_type == MESSAGE_STDERR:
             debug("got stderr message", body)
-            sys.stderr.write(str(body, "utf8"))
+            stderr.write(body)
         elif message_type == MESSAGE_EXIT:
             debug("got exit message", body)
             return int.from_bytes(body, "big", signed=False)
@@ -139,13 +140,23 @@ async def main():
 
     signal.signal(signal.SIGHUP, handler)
     signal.signal(signal.SIGINT, handler)
-
-    stdin_task = asyncio.create_task(poll_stdin(writer))
-    exit_code = await poll_replies(reader)
+    debug('sys.stdin', sys.stdin, 'sys.stdout', sys.stdout, 'sys.stderr', sys.stderr)
+    stdin, stdout, stderr = await create_standard_streams(sys.stdin, sys.stdout, sys.stderr)
+    stdin_task = asyncio.create_task(poll_stdin(writer, stdin))
+    exit_code = await poll_replies(reader, stdout, stderr)
     stdin_task.cancel()
+    writer.close()
     output.flush()
-    os._exit(exit_code)  # TODO: why is it not exiting cleanly?
+    #debug('returning')
+    return exit_code
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    loop = asyncio.get_event_loop()
+    exit_code = loop.run_until_complete(main())
+    debug('completed without issue')
+    output.flush()
+    output.close()
+    loop.stop()
+    loop.close()
+    sys.exit(exit_code)

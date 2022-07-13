@@ -11,7 +11,7 @@ import sys
 import os
 import stat
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Dict, Any, Optional, Tuple, List, Any
 from urllib.parse import urlparse
 
 
@@ -24,6 +24,10 @@ MESSAGE_STDOUT = 3
 MESSAGE_STDERR = 4
 MESSAGE_EXIT = 5
 MESSAGE_SIGNAL = 6
+
+
+def log(*args: Any, **kwargs: Any) -> None:
+    print(*args, **kwargs, file=sys.stdout)
 
 
 def encode(message_type: int, body: bytes) -> bytes:
@@ -46,7 +50,7 @@ def request_cwd(request: Dict[str, Any]) -> Optional[str]:
     """
     cwd = request["cwd"]
     if cwd is not None and not Path(cwd).exists():
-        print(f"The path {cwd} does not exist on the host, ignoring", file=sys.stdout)
+        log(f"The path {cwd} does not exist on the host, ignoring")
         cwd = None
     return cwd
 
@@ -58,7 +62,7 @@ def translate_darwin_call(command: str, args: List[str]) -> Tuple[str, List[str]
 
     if command == "xdg-open":
         return ("open", args)
-    elif command == "xclip":
+    elif command == "xclip" or command == "xclip-nvim":
         if "-o" not in args and "-out" not in args:
             return ("pbcopy", [])
         else:
@@ -92,7 +96,7 @@ async def poll_client(reader: StreamReader, process: Process, stdin: StreamWrite
                 stdin.write(body)
         elif message_type == MESSAGE_SIGNAL:
             signal = int.from_bytes(body, "big", signed=False)
-            print("Got signal", signal)
+            log("Got signal", signal)
             process.send_signal(signal)
 
 
@@ -119,7 +123,7 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
 
         cwd = request_cwd(request)
         args = request["args"]
-        if command not in allowed_commands:
+        if command not in allowed_commands and command != "xclip-nvim":
             writer.write(
                 encode(
                     MESSAGE_STDERR,
@@ -162,8 +166,9 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
             await process.wait()
             assert process.returncode is not None
             client_task.cancel()
-            stdout_task.cancel()
-            stderr_task.cancel()
+            await stdout_task
+            await stderr_task
+
             writer.write(
                 encode(
                     MESSAGE_EXIT,

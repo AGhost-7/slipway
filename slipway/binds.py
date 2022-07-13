@@ -2,6 +2,7 @@ import pwd
 import os
 from sys import platform
 from os import environ, path
+from pathlib import Path
 
 
 class Bind(object):
@@ -22,7 +23,7 @@ class Binds(object):
         self.args = args
         self.image = image
 
-    def initialize(self):
+    def initialize(self) -> None:
         """
         Creates the directory with appropriate permissions if it doesn't
         exist. Otherwise if we let docker do this the permissions will be
@@ -49,10 +50,7 @@ class Binds(object):
             container_path = path.join(self.image.home, ".gnupg")
             yield Bind(gnupg_path, container_path, "d")
 
-    def list(self):
-        """
-        List all bind mounts, including the default ones.
-        """
+    def _credential_binds(self):
         home_mappings = [
             ("d", ".ssh"),
             ("f", ".gitconfig"),
@@ -67,6 +65,15 @@ class Binds(object):
             host_path = path.join(environ["HOME"], mapping)
             container_path = path.join(self.image.home, mapping)
             yield Bind(host_path, container_path, type)
+
+    def list(self):
+        """
+        List all bind mounts, including the default ones.
+        """
+        yield from self._credential_binds()
+
+        script_path = Path(__file__)
+        yield Bind(str(script_path.parent.parent), "/usr/local/lib/slipway")
 
         workspace_base = path.basename(self.args.workspace)
         workspace_path = path.join(self.image.home, workspace_base)
