@@ -75,9 +75,10 @@ class Binds(object):
         script_path = Path(__file__)
         yield Bind(str(script_path.parent.parent), "/usr/local/lib/slipway")
 
-        workspace_base = path.basename(self.args.workspace)
-        workspace_path = path.join(self.image.home, workspace_base)
-        yield Bind(self.args.workspace, workspace_path, "d")
+        if not self.args.unshare_workspace:
+            workspace_base = path.basename(self.args.workspace)
+            workspace_path = path.join(self.image.home, workspace_base)
+            yield Bind(self.args.workspace, workspace_path, "d")
 
         if path.isfile("/etc/localtime") and platform != "darwin":
             yield Bind("/etc/localtime", "/etc/localtime", "fro")

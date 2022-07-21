@@ -38,6 +38,7 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     start_parser.add_argument("--network", default=configuration.network)
     start_parser.add_argument("--runtime-dir", default=configuration.runtime_dir)
     start_parser.add_argument("--shm-size", default=configuration.shm_size)
+    start_parser.add_argument("--unshare-workspace", default=configuration.unshare_workspace, action='store_true')
 
     purge_parser = subparsers.add_parser("purge")
     purge_parser.add_argument("image")
@@ -78,4 +79,6 @@ def parse_args(configuration: Configuration, raw_args: List[str] = None):
             args.device.extend(alias["device"])
         if "shm_size" in alias:
             args.shm_size = alias["shm_size"]
+        if "unshare_workspace" in alias:
+            args.unshare_workspace = alias["unshare_workspace"]
     return args

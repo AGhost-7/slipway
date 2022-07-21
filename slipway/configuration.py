@@ -41,6 +41,7 @@ class Configuration(object):
         self.network = "host"
         self.device = []
         self.shm_size = None
+        self.unshare_workspace = False
 
     @property
     def proxy_commands(self) -> List[str]:
@@ -83,3 +84,5 @@ class Configuration(object):
                     self.runtime = config["runtime"]
                 if "shm_size" in config:
                     self.shm_size = config["shm_size"]
+                if "unshare_workspace" in config:
+                    self.unshare_workspace = config["unshare_workspace"]
