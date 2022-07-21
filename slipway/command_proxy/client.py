@@ -17,8 +17,8 @@ import stat
 try:
     from .stream import create_standard_streams
 except (ModuleNotFoundError, ImportError):
-    sys.path.append('/usr/local/lib/slipway/slipway')
-    from command_proxy.stream import create_standard_streams
+    sys.path.append("/usr/local/lib/slipway/slipway")
+    from command_proxy.stream import create_standard_streams  # type: ignore
 
 
 output = open("/tmp/proxy-command.log", "w+")
@@ -31,7 +31,7 @@ def debug(*args):
 def host_cwd() -> Optional[str]:
     cwd = os.getcwd()
     mapping_path = Path("/run/user") / str(os.getuid()) / "slipway-mapping.json"
-    debug('host_cwd::mapping_path', mapping_path) 
+    debug("host_cwd::mapping_path", mapping_path)
     if not mapping_path.exists():
         return None
     with mapping_path.open() as file:
@@ -80,7 +80,9 @@ async def poll_stdin(server_writer: StreamWriter, reader: StreamReader):
         server_writer.write(encode(MESSAGE_STDIN, chunk))
 
 
-async def poll_replies(server_reader: StreamReader, stdout: StreamWriter, stderr: StreamWriter) -> int:
+async def poll_replies(
+    server_reader: StreamReader, stdout: StreamWriter, stderr: StreamWriter
+) -> int:
     """
     Checks for messages from the server and send to appropriate pipe or exit.
     """
@@ -140,21 +142,23 @@ async def main():
 
     signal.signal(signal.SIGHUP, handler)
     signal.signal(signal.SIGINT, handler)
-    debug('sys.stdin', sys.stdin, 'sys.stdout', sys.stdout, 'sys.stderr', sys.stderr)
-    stdin, stdout, stderr = await create_standard_streams(sys.stdin, sys.stdout, sys.stderr)
+    debug("sys.stdin", sys.stdin, "sys.stdout", sys.stdout, "sys.stderr", sys.stderr)
+    stdin, stdout, stderr = await create_standard_streams(
+        sys.stdin, sys.stdout, sys.stderr
+    )
     stdin_task = asyncio.create_task(poll_stdin(writer, stdin))
     exit_code = await poll_replies(reader, stdout, stderr)
     stdin_task.cancel()
     writer.close()
     output.flush()
-    #debug('returning')
+    # debug('returning')
     return exit_code
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     exit_code = loop.run_until_complete(main())
-    debug('completed without issue')
+    debug("completed without issue")
     output.flush()
     output.close()
     loop.stop()

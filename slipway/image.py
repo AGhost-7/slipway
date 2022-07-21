@@ -100,8 +100,7 @@ class Image(object):
         Pulls the image if not present
         """
         if not self.exists():
-            message = "Image {} not found, attempting to pull down"
-            print(message.format(self.name))
+            logging.info("Image {self.name} not found, attempting to pull down")
             self.pull()
             self._create_stale_check_file()
         elif self.args.pull and not (self.args.pull_daily and self._pulled_today()):

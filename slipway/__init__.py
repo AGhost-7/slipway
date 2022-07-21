@@ -1,5 +1,14 @@
 from os import environ
 import sys
+import logging
+
+level = getattr(logging, environ.get("SLIPWAY_LOG_LEVEL", "INFO").upper())
+logging.basicConfig(
+    format="%(message)s",
+    stream=sys.stderr,
+    level=level,
+)
+
 from argparse import ArgumentParser
 
 from .command_proxy import CommandProxy
@@ -11,7 +20,7 @@ from .argument_parser import parse_args
 
 def main():
     if sys.version_info.major < 3:
-        print("Python 2 is not supported")
+        logging.error("Python 2 is not supported")
         sys.exit(1)
     configuration = Configuration(environ)
     configuration.load()
@@ -26,7 +35,7 @@ def main():
         elif args.command == "stop":
             command_proxy.stop_server()
         elif args.command == "logs":
-            print(command_proxy.logs())
+            sys.stderr.write(command_proxy.logs())
     else:
         client = None
 
@@ -49,7 +58,7 @@ def main():
             container.binds.initialize()
             container.command_proxy.start_server()
             if container.exists():
-                print("Container {} already exists".format(container.name))
+                logging.error(f"Container {container.name} already exists")
                 sys.exit(1)
             container.run()
         elif args.mode == "purge":

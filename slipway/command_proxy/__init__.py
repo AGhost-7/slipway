@@ -3,6 +3,7 @@ import os
 from os import path
 from pathlib import Path
 import sys
+import logging
 
 
 class CommandProxy(object):
@@ -69,7 +70,7 @@ class CommandProxy(object):
         self._log_file.touch(exist_ok=True)
         log_file = open(self._log_file)
         args = ["python3", self.server_script, self.bind_url] + self._commands
-        print("starting with", args)
+        logging.debug(f"starting with {args}")
 
         process = Popen(
             args,
@@ -92,9 +93,9 @@ class CommandProxy(object):
         self._pid_file.parent.mkdir(parents=True, exist_ok=True)
 
         if self._pid_file.exists():
-            print("pid exists")
+            logging.debug("pid exists")
             if not self.is_server_running():
-                print("server not running")
+                logging.debug("server not running")
                 self._remove_file(self._pid_file)
                 self._remove_file(self._socket_file)
                 self._start_background_process(kwargs)
@@ -106,7 +107,7 @@ class CommandProxy(object):
         if self.is_server_running():
             os.kill(self._pid(), 15)  # SIGTERM
         else:
-            print("Server is not running")
+            logging.info("Server is not running")
 
     def logs(self) -> str:
         with open(self._log_file) as file:
