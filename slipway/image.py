@@ -2,6 +2,7 @@ from typing import List
 from os import path, makedirs
 from datetime import datetime
 from .util import snake_case
+import logging
 
 
 class PasswdEntry(object):
@@ -100,7 +101,7 @@ class Image(object):
         Pulls the image if not present
         """
         if not self.exists():
-            logging.info("Image {self.name} not found, attempting to pull down")
+            logging.info(f"Image {self.name} not found, attempting to pull down")
             self.pull()
             self._create_stale_check_file()
         elif self.args.pull and not (self.args.pull_daily and self._pulled_today()):
