@@ -42,9 +42,12 @@ class Configuration(object):
         self.device = []
         self.shm_size = None
         self.unshare_workspace = False
+        self._proxy_commands = None
 
     @property
     def proxy_commands(self) -> List[str]:
+        if self._proxy_commands is not None:
+            return self._proxy_commands
         commands = [
             command
             for command in ["docker", "podman", "docker-compose"]
@@ -63,7 +66,8 @@ class Configuration(object):
         if self.config_path.exists():
             with open(self.config_path) as file_descriptor:
                 config = yaml.safe_load(file_descriptor)
-
+                if "proxy_commands" in config:
+                    self._proxy_commands = config["proxy_commands"]
                 if "alias" in config:
                     self.alias = config["alias"]
                 if "workspace" in config:
