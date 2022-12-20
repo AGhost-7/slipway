@@ -26,7 +26,7 @@ cargo, etc).
 
 ## Requirements
 - Linux OS
-- Python 3.7+
+- Python 3.8+
 - Podman (rootless only)
 
 ## Getting Started

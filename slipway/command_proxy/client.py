@@ -156,11 +156,8 @@ async def main():
 
 
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    exit_code = loop.run_until_complete(main())
+    exit_code = asyncio.run(main())
     debug("completed without issue")
     output.flush()
     output.close()
-    loop.stop()
-    loop.close()
     sys.exit(exit_code)
