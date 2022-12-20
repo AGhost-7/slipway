@@ -16,9 +16,11 @@ import stat
 
 try:
     from .stream import create_standard_streams
+    from .protocol import MessageType, encode, decode, ConnectionClosedException
 except (ModuleNotFoundError, ImportError):
     sys.path.append("/usr/local/lib/slipway/slipway")
     from command_proxy.stream import create_standard_streams  # type: ignore
+    from command_proxy.protocol import MessageType, encode, decode, ConnectionClosedException  # type: ignore
 
 
 output = open("/tmp/proxy-command.log", "w+")
@@ -42,32 +44,6 @@ def host_cwd() -> Optional[str]:
     return None
 
 
-# The binary protocol is layed out with a constant size header and variable
-# size body. The first byte determines the type of message, and there are
-# two bytes which determine the size of the message
-
-MESSAGE_INIT = 1
-MESSAGE_STDIN = 2
-MESSAGE_STDOUT = 3
-MESSAGE_STDERR = 4
-MESSAGE_EXIT = 5
-MESSAGE_SIGNAL = 6
-
-
-def encode(message_type: int, body: bytes) -> bytes:
-    """
-    Encodes the the data into a frame. The header is a fixed size of 3 bytes,
-    where the first byte determines the type of frame. The next two bytes
-    determine the size of the body. The body is of variable size.
-    """
-    size = len(body)
-    assert size < 65536, "Message encoding failed due to out of bounds"
-    size_bytes = size.to_bytes(2, byteorder="big", signed=False)
-    type_bytes = message_type.to_bytes(1, byteorder="big", signed=False)
-    message = b"".join([type_bytes, size_bytes, body])
-    return message
-
-
 async def poll_stdin(server_writer: StreamWriter, reader: StreamReader):
     """
     Forward stdin to server.
@@ -77,7 +53,7 @@ async def poll_stdin(server_writer: StreamWriter, reader: StreamReader):
         chunk = await reader.read(1024)
         if len(chunk) == 0:
             eof = True
-        server_writer.write(encode(MESSAGE_STDIN, chunk))
+        server_writer.write(encode(MessageType.STDIN, chunk))
 
 
 async def poll_replies(
@@ -87,27 +63,20 @@ async def poll_replies(
     Checks for messages from the server and send to appropriate pipe or exit.
     """
     while True:
-        header = await server_reader.read(3)
-        if len(header) < 3:
-            debug("connection closed")
-            print("Connection to proxy server closed", file=sys.stderr)
-            return 1
-        message_type = int.from_bytes(header[0:1], "big", signed=False)
-        size = int.from_bytes(header[1:3], "big", signed=False)
-        debug("got header, waiting for body")
-        body = await server_reader.read(size)
-        if len(body) < size:
+        try:
+            (message_type, body) = await decode(server_reader)
+        except ConnectionClosedException:
             debug("connection closed")
             print("Connection to proxy server closed", file=sys.stderr)
             return 1
 
-        if message_type == MESSAGE_STDOUT:
+        if message_type == MessageType.STDOUT:
             debug("got stdout message", body)
             stdout.write(body)
-        elif message_type == MESSAGE_STDERR:
+        elif message_type == MessageType.STDERR:
             debug("got stderr message", body)
             stderr.write(body)
-        elif message_type == MESSAGE_EXIT:
+        elif message_type == MessageType.EXIT:
             debug("got exit message", body)
             return int.from_bytes(body, "big", signed=False)
 
@@ -131,12 +100,13 @@ async def main():
             "tty": os.isatty(sys.stdout.fileno()),
         }
     )
-    writer.write(encode(MESSAGE_INIT, bytes(payload, "utf8")))
+    writer.write(encode(MessageType.INIT, bytes(payload, "utf8")))
 
     def handler(signal_number: int, frame):
         writer.write(
             encode(
-                MESSAGE_SIGNAL, signal_number.to_bytes(4, byteorder="big", signed=False)
+                MessageType.SIGNAL,
+                signal_number.to_bytes(4, byteorder="big", signed=False),
             )
         )
 

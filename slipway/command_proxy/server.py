@@ -13,35 +13,15 @@ import stat
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List, Any
 from urllib.parse import urlparse
+from .protocol import MessageType, encode, decode
 
 
 url = urlparse(sys.argv[1])
 allowed_commands = sys.argv[2:]
 
-MESSAGE_INIT = 1
-MESSAGE_STDIN = 2
-MESSAGE_STDOUT = 3
-MESSAGE_STDERR = 4
-MESSAGE_EXIT = 5
-MESSAGE_SIGNAL = 6
-
 
 def log(*args: Any, **kwargs: Any) -> None:
     print(*args, **kwargs, file=sys.stdout)
-
-
-def encode(message_type: int, body: bytes) -> bytes:
-    """
-    Encodes the the data into a frame. The header is a fixed size of 3 bytes,
-    where the first byte determines the type of frame. The next two bytes
-    determine the size of the body. The body is of variable size.
-    """
-    size = len(body)
-    assert size < 65536, "Message encoding failed due to out of bounds"
-    size_bytes = size.to_bytes(2, byteorder="big", signed=False)
-    type_bytes = message_type.to_bytes(1, byteorder="big", signed=False)
-    message = b"".join([type_bytes, size_bytes, body])
-    return message
 
 
 def request_cwd(request: Dict[str, Any]) -> Optional[str]:
@@ -70,37 +50,26 @@ def translate_darwin_call(command: str, args: List[str]) -> Tuple[str, List[str]
     return (command, args)
 
 
-async def read_client(reader: StreamReader) -> Tuple[int, bytes]:
-    """
-    Waits until a complete message has been received from the client, and then
-    decodes it.
-    """
-    header = await reader.read(3)
-    assert len(header) != 0
-    message_type = int.from_bytes(header[0:1], "big", signed=False)
-    size = int.from_bytes(header[1:3], "big", signed=False)
-    body = await reader.read(size)
-    return (message_type, body)
-
-
 async def poll_client(reader: StreamReader, process: Process, stdin: StreamWriter):
     """
     Continuously waits to receive a stdin message from the client.
     """
     while True:
-        (message_type, body) = await read_client(reader)
-        if message_type == MESSAGE_STDIN:
+        (message_type, body) = await decode(reader)
+        if message_type == MessageType.STDIN:
             if len(body) == 0:
                 stdin.write_eof()
             else:
                 stdin.write(body)
-        elif message_type == MESSAGE_SIGNAL:
+        elif message_type == MessageType.SIGNAL:
             signal = int.from_bytes(body, "big", signed=False)
             log("Got signal", signal)
             process.send_signal(signal)
 
 
-async def poll_pipe(writer: StreamWriter, message_type: int, pipe: StreamReader):
+async def poll_pipe(
+    writer: StreamWriter, message_type: MessageType, pipe: StreamReader
+):
     """
     Continuously waits for stdout/stderr chunks which are then sent back to the
     client.
@@ -116,8 +85,8 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
     """
     Handles a new client connection.
     """
-    (message_type, body) = await read_client(reader)
-    if message_type == MESSAGE_INIT:
+    (message_type, body) = await decode(reader)
+    if message_type == MessageType.INIT:
         request = json.loads(body)
         command = request["command"]
 
@@ -126,7 +95,7 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
         if command not in allowed_commands and command != "xclip-nvim":
             writer.write(
                 encode(
-                    MESSAGE_STDERR,
+                    MessageType.STDERR,
                     bytes(
                         f"Command {command} is not permitted to run on the host\n",
                         "utf8",
@@ -134,7 +103,7 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
                 )
             )
             writer.write(
-                encode(MESSAGE_EXIT, (1).to_bytes(1, byteorder="big", signed=False))
+                encode(MessageType.EXIT, (1).to_bytes(1, byteorder="big", signed=False))
             )
         else:
             if sys.platform == "darwin":
@@ -157,10 +126,10 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
                 poll_client(reader, process, process.stdin)
             )
             stdout_task = asyncio.create_task(
-                poll_pipe(writer, MESSAGE_STDOUT, process.stdout)
+                poll_pipe(writer, MessageType.STDOUT, process.stdout)
             )
             stderr_task = asyncio.create_task(
-                poll_pipe(writer, MESSAGE_STDERR, process.stderr)
+                poll_pipe(writer, MessageType.STDERR, process.stderr)
             )
 
             await process.wait()
@@ -171,7 +140,7 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
 
             writer.write(
                 encode(
-                    MESSAGE_EXIT,
+                    MessageType.EXIT,
                     process.returncode.to_bytes(1, byteorder="big", signed=False),
                 )
             )
