@@ -70,7 +70,8 @@ class CommandProxy(object):
         self._log_file.touch(exist_ok=True)
         log_file = open(self._log_file)
         args = ["python3", self.server_script, self.bind_url] + self._commands
-        logging.debug(f"starting with {args}")
+        args_text = ' '.join([str(arg) for arg in args])
+        logging.debug(f"starting with {args_text}")
 
         process = Popen(
             args,

@@ -13,7 +13,7 @@ import stat
 from pathlib import Path
 from typing import Dict, Any, Optional, Tuple, List, Any
 from urllib.parse import urlparse
-from .protocol import MessageType, encode, decode
+from slipway.command_proxy.protocol import MessageType, encode, decode
 
 
 url = urlparse(sys.argv[1])
