@@ -16,8 +16,7 @@ import selectors
 from collections import deque
 from threading import Thread
 from concurrent.futures import Future
-
-from . import compat
+import sys as compat
 
 
 def is_pipe_transport_compatible(pipe):
