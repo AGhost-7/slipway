@@ -25,7 +25,7 @@ cargo, etc).
 - sets up correct uid mappings on podman.
 
 ## Requirements
-- Linux OS
+- Linux / MacOS
 - Python 3.7+
 - Podman (rootless only)
 
@@ -137,4 +137,11 @@ poetry install
 Run tests:
 ```
 poetry run pytest
+```
+
+## MacOs Tips
+If you're having performance issues with a large git repository, you can enable
+the following feature to speed things up:
+```
+git config feature.manyFiles true
 ```

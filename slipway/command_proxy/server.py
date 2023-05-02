@@ -112,6 +112,7 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
     """
     Handles a new client connection.
     """
+    print('client_connected')
     (message_type, body) = await read_client(reader)
     if message_type == MESSAGE_INIT:
         request = json.loads(body)
