@@ -111,6 +111,9 @@ class Container(object):
                     f"{self.command_proxy.client_path}:/usr/bin/{command}",
                 ]
             )
+        for port in self.args.port or []:
+            arguments.append("-p")
+            arguments.append(port)
 
         if self.args.mount_docker:
             arguments.append("-v")

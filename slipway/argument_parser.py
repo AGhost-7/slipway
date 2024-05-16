@@ -28,6 +28,9 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
         "--environment", "-e", action="append", default=configuration.environment
     )
     start_parser.add_argument(
+        "--port", "-p", action="append", default=configuration.port
+    )
+    start_parser.add_argument(
         "--proxy-command",
         dest="proxy_commands",
         action="append",
@@ -81,4 +84,6 @@ def parse_args(configuration: Configuration, raw_args: List[str] = None):
             args.shm_size = alias["shm_size"]
         if "unshare_workspace" in alias:
             args.unshare_workspace = alias["unshare_workspace"]
+        if "port" in alias:
+            args.port = alias["port"]
     return args

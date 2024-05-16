@@ -38,9 +38,10 @@ class Configuration(object):
         self.pull_daily = False
         self.mount_docker = False
         self.runtime = "podman" if sys.platform == "linux" else "docker"
-        self.network = "host"
+        self.network = "host" if sys.platform == "linux" else "bridge"
         self.device = []
         self.shm_size = None
+        self.port = []
         self.unshare_workspace = False
         self._proxy_commands = None
 
@@ -90,3 +91,5 @@ class Configuration(object):
                     self.shm_size = config["shm_size"]
                 if "unshare_workspace" in config:
                     self.unshare_workspace = config["unshare_workspace"]
+                if "port" in config:
+                    self.port = config["port"]
