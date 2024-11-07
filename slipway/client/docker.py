@@ -6,6 +6,8 @@ import docker
 import subprocess
 from typing import Optional
 import sys
+import subprocess
+import json
 
 
 class DockerClient(object):
@@ -33,15 +35,22 @@ class DockerClient(object):
     def pull_image(self, name):
         subprocess.run(["docker", "pull", name])
 
-    def image_exists(self, name):
-        try:
-            self.client.images.get(name)
-            return True
-        except ImageNotFound:
-            return False
 
     def inspect_image(self, name):
-        return self.client.images.get(name).attrs
+        result = subprocess.run(
+            ["docker", "image", "inspect", "--format", "{{json .}}", name],
+            capture_output=True,
+        )
+        images = json.loads(str(result.stdout, "utf8").strip())
+        if isinstance(images, list):
+            return images[0]
+
+        return images
+    def image_exists(self, name):
+        result = subprocess.run(
+            ["docker", "image", "inspect", name], capture_output=True
+        )
+        return result.returncode == 0
 
     def list_all_containers(self):
         return [container.name for container in self.client.containers.list(all=True)]
@@ -53,19 +62,9 @@ class DockerClient(object):
         return "name=rootless" in self.client.info()["SecurityOptions"]
 
     def image_file(self, name: str, file_path: str) -> Optional[str]:
-        container = self.client.containers.create(name)
-        try:
-            chunks, stat = container.get_archive(file_path)
-            aggregate = bytearray()
-            for chunk in chunks:
-                aggregate += chunk
-            tar = tarfile.open(fileobj=BytesIO(aggregate))
-            file_content = tar.extractfile(path.basename(file_path))
+        result = subprocess.run(
+            ["docker", "run", "--rm", "--entrypoint", "/bin/cat", name, file_path],
+            capture_output=True,
+        )
 
-            return (
-                file_content
-                if file_content is None
-                else str(file_content.read(), "utf-8")
-            )
-        finally:
-            container.remove()
+        return str(result.stdout, "utf-8")

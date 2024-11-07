@@ -10,7 +10,7 @@ slipway = 'slipway:main'
 
 [tool.poetry.dependencies]
 python = "^3.8"
-docker = "^6.1.0"
+docker = "^7.0.0"
 PyYAML = "^6.0"
 
 [tool.poetry.dev-dependencies]
