@@ -53,6 +53,9 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     proxy_start.add_argument(
         "commands", nargs="*", default=configuration.proxy_commands
     )
+    proxy_start.add_argument(
+        "--foreground", action="store_true", default=False
+    )
     proxy_stop = command_proxy_subparser.add_parser("stop")
     proxy_logs = command_proxy_subparser.add_parser("logs")
     return parser

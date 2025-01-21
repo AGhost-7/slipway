@@ -31,7 +31,7 @@ def main():
             args.runtime_dir, args.log_directory, getattr(args, "commands", [])
         )
         if args.command == "start":
-            command_proxy.start_server()
+            command_proxy.start_server(foreground=args.foreground)
         elif args.command == "stop":
             command_proxy.stop_server()
         elif args.command == "logs":

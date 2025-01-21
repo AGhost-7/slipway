@@ -65,32 +65,34 @@ class CommandProxy(object):
         except FileNotFoundError:
             pass
 
-    def _start_background_process(self, child_process_kwargs):
-        self._log_file.parent.mkdir(parents=True, exist_ok=True)
-        self._log_file.touch(exist_ok=True)
-        log_file = open(self._log_file)
+    def _start_process(self, env, foreground):
         args = ["python3", self.server_script, self.bind_url] + self._commands
         args_text = ' '.join([str(arg) for arg in args])
         logging.debug(f"starting with {args_text}")
 
-        process = Popen(
-            args,
-            stdin=DEVNULL,
-            stdout=log_file,
-            stderr=log_file,
-            **(
-                {
-                    # Makes the subprocess its own parent, prevents the process
-                    # from becoming defunct once it exits.
-                    "preexec_fn": os.setsid,
-                    **child_process_kwargs,
-                }
-            ),
-        )
-        with open(self._pid_file, "w+") as file:
-            file.write(str(process.pid))
+        if foreground:
+            with open(self._pid_file, "w+") as file:
+                file.write(str(os.getpid()))
+            os.execvp(args[0], args)
+        else:
+            self._log_file.parent.mkdir(parents=True, exist_ok=True)
+            self._log_file.touch(exist_ok=True)
+            log_file = open(self._log_file)
 
-    def start_server(self, **kwargs):
+            process = Popen(
+                args,
+                stdin=DEVNULL,
+                stdout=log_file,
+                stderr=log_file,
+                env=env,
+                # Makes the subprocess its own parent, prevents the process
+                # from becoming defunct once it exits.
+                preexec_fn=os.setsid,
+            )
+            with open(self._pid_file, "w+") as file:
+                file.write(str(process.pid))
+
+    def start_server(self, env=None, foreground=False):
         self._pid_file.parent.mkdir(parents=True, exist_ok=True)
 
         if self._pid_file.exists():
@@ -99,10 +101,10 @@ class CommandProxy(object):
                 logging.debug("server not running")
                 self._remove_file(self._pid_file)
                 self._remove_file(self._socket_file)
-                self._start_background_process(kwargs)
+                self._start_process(env=env, foreground=foreground)
         else:
             # starting background process
-            self._start_background_process(kwargs)
+            self._start_process(env=env, foreground=foreground)
 
     def stop_server(self):
         if self.is_server_running():
