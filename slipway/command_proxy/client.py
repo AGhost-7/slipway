@@ -118,10 +118,14 @@ async def main():
     )
     stdin_task = asyncio.create_task(poll_stdin(writer, stdin))
     exit_code = await poll_replies(reader, stdout, stderr)
+
+    await stdout.drain()
+    await stderr.drain()
     stdin_task.cancel()
     writer.close()
     output.flush()
-    # debug('returning')
+
+    debug('exit_code', exit_code)
     return exit_code
 
 
