@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from .configuration import Configuration
 from argparse import ArgumentParser
 
@@ -41,7 +41,11 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     start_parser.add_argument("--network", default=configuration.network)
     start_parser.add_argument("--runtime-dir", default=configuration.runtime_dir)
     start_parser.add_argument("--shm-size", default=configuration.shm_size)
-    start_parser.add_argument("--unshare-workspace", default=configuration.unshare_workspace, action='store_true')
+    start_parser.add_argument(
+        "--unshare-workspace",
+        default=configuration.unshare_workspace,
+        action="store_true",
+    )
 
     purge_parser = subparsers.add_parser("purge")
     purge_parser.add_argument("image")
@@ -53,15 +57,13 @@ def create_parser(configuration: Configuration) -> ArgumentParser:
     proxy_start.add_argument(
         "commands", nargs="*", default=configuration.proxy_commands
     )
-    proxy_start.add_argument(
-        "--foreground", action="store_true", default=False
-    )
+    proxy_start.add_argument("--foreground", action="store_true", default=False)
     proxy_stop = command_proxy_subparser.add_parser("stop")
     proxy_logs = command_proxy_subparser.add_parser("logs")
     return parser
 
 
-def parse_args(configuration: Configuration, raw_args: List[str] = None):
+def parse_args(configuration: Configuration, raw_args: Optional[List[str]] = None):
     parser = create_parser(configuration)
     args = parser.parse_args(raw_args)
 

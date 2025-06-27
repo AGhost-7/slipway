@@ -35,7 +35,6 @@ class DockerClient(object):
     def pull_image(self, name):
         subprocess.run(["docker", "pull", name])
 
-
     def inspect_image(self, name):
         result = subprocess.run(
             ["docker", "image", "inspect", "--format", "{{json .}}", name],
@@ -46,6 +45,7 @@ class DockerClient(object):
             return images[0]
 
         return images
+
     def image_exists(self, name):
         result = subprocess.run(
             ["docker", "image", "inspect", name], capture_output=True

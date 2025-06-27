@@ -67,7 +67,7 @@ class CommandProxy(object):
 
     def _start_process(self, env, foreground):
         args = ["python3", self.server_script, self.bind_url] + self._commands
-        args_text = ' '.join([str(arg) for arg in args])
+        args_text = " ".join([str(arg) for arg in args])
         logging.debug(f"starting with {args_text}")
 
         if foreground:

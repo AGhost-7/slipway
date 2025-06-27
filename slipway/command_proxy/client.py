@@ -125,7 +125,7 @@ async def main():
     writer.close()
     output.flush()
 
-    debug('exit_code', exit_code)
+    debug("exit_code", exit_code)
     return exit_code
 
 

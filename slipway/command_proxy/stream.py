@@ -1,4 +1,3 @@
-
 """
 Taken from: https://github.com/vxgmichel/aioconsole/blob/main/aioconsole/stream.py
 
