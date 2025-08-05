@@ -38,7 +38,7 @@ class Configuration(object):
         self.pull_daily = False
         self.mount_docker = False
         self.runtime = "podman" if sys.platform == "linux" else "docker"
-        self.network = "host" if sys.platform == "linux" else "bridge"
+        self.network = "host"
         self.device = []
         self.shm_size = None
         self.port = []
