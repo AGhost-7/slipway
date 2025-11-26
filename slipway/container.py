@@ -134,6 +134,10 @@ class Container(object):
             argument = bind.host_path + ":" + bind.container_path
             if "ro" in bind.type:
                 argument += ":ro"
+            else:
+                argument += ":rw"
+                if Path("/etc/selinux").exists():
+                    argument += ",z"
             arguments.append(argument)
             mappings.append({"host": bind.host_path, "container": bind.container_path})
 
