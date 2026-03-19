@@ -21,7 +21,7 @@ allowed_commands = sys.argv[2:]
 
 
 def log(*args: Any, **kwargs: Any) -> None:
-    print(*args, **kwargs, file=sys.stdout)
+    print(*args, **kwargs, file=sys.stdout, flush=True)
 
 
 def request_cwd(request: Dict[str, Any]) -> Optional[str]:
@@ -108,6 +108,7 @@ async def client_connected(reader: StreamReader, writer: StreamWriter):
         else:
             if sys.platform == "darwin":
                 (command, args) = translate_darwin_call(command, args)
+            log('creating subprocess with $XAUTHORITY', os.environ["XAUTHORITY"])
             process = await asyncio.create_subprocess_exec(
                 command,
                 *args,
