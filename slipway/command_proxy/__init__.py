@@ -4,6 +4,7 @@ from os import path
 from pathlib import Path
 import sys
 import logging
+from os import environ
 
 
 class CommandProxy(object):
@@ -23,7 +24,7 @@ class CommandProxy(object):
         if sys.platform == "linux":
             return "unix:///run/slipway/command-proxy.sock"
         else:
-            return "tcp://host.docker.internal:7272"
+            return "tcp://127.0.0.1:7272"
 
     @property
     def bind_url(self) -> str:
@@ -77,14 +78,16 @@ class CommandProxy(object):
         else:
             self._log_file.parent.mkdir(parents=True, exist_ok=True)
             self._log_file.touch(exist_ok=True)
-            log_file = open(self._log_file)
 
             process = Popen(
                 args,
                 stdin=DEVNULL,
-                stdout=log_file,
-                stderr=log_file,
-                env=env,
+                stdout=DEVNULL,
+                stderr=DEVNULL,
+                env={
+                    **env,
+                    "LOGF_ILE": self._log_file,
+                },
                 # Makes the subprocess its own parent, prevents the process
                 # from becoming defunct once it exits.
                 preexec_fn=os.setsid,
@@ -92,7 +95,7 @@ class CommandProxy(object):
             with open(self._pid_file, "w+") as file:
                 file.write(str(process.pid))
 
-    def start_server(self, env=None, foreground=False):
+    def start_server(self, env=environ, foreground=False):
         self._pid_file.parent.mkdir(parents=True, exist_ok=True)
 
         if self._pid_file.exists():
