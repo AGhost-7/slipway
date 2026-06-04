@@ -32,12 +32,12 @@ cargo, etc).
 ## Getting Started
 Install slipway:
 ```sh
-python3 -m pip install slipway
+pipx install slipway
 ```
 
 Run an example image:
 ```
-slipway start aghost7/nodejs-dev:focal-carbon
+slipway start aghost7/nodejs-dev:noble
 ```
 
 ## Configuration
@@ -49,8 +49,7 @@ pull_daily: true
 runtime: podman
 alias:
   devops:
-    image: aghost7/devops:focal
-    network: slirp4netns
+    image: aghost7/devops:noble
     environment:
     - AWS_ACCESS_KEY_ID
 ```
@@ -121,7 +120,7 @@ This is actually because slipway defaults to host-based networking. When using
 rootless containers, you need to change the network used to `slirp4netns`.
 
 ```bash
-slipway start --network slirp4netns aghost7/devops:focal
+slipway start --network slirp4netns aghost7/devops:noble
 ```
 
 ## Developing
